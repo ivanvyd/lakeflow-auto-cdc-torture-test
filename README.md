@@ -73,6 +73,7 @@ The default schema is `auto_cdc_torture_test`. Cleanup requires a separately sup
 ## Read next
 
 - [Full article](article/article.md)
+- [Publishing kit and social copy](article/publishing-kit.md)
 - [Claim-by-claim evidence ledger](article/fact-check.md)
 - [Official source ledger](docs/sources.md)
 - [Reproduction guide](docs/reproduction.md)
