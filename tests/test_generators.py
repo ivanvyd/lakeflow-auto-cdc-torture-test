@@ -7,7 +7,13 @@ from src.generators.dispatch import (
     _rows_to_insert_sql,
     _t,
 )
-from src.scenario_specs import FLOW_SPECS, INITIAL_ROWS_BY_SOURCE, LATE_ROWS_BY_SOURCE, SOURCE_SPECS
+from src.scenario_specs import (
+    FLOW_SPECS,
+    INITIAL_ROWS_BY_SOURCE,
+    LATE_ROWS_BY_SOURCE,
+    SCENARIO_EVENTS,
+    SOURCE_SPECS,
+)
 
 
 def test_t_adds_seconds() -> None:
@@ -31,6 +37,12 @@ def test_every_source_row_uses_the_typed_schema() -> None:
         for rows in rows_by_source.values():
             assert all(isinstance(row, CdcEvent) for row in rows)
             assert all(row._fields == SOURCE_COLUMNS for row in rows)
+
+
+def test_dispatch_events_match_each_materialized_scenario_stream() -> None:
+    for source in SOURCE_SPECS:
+        assert SCENARIO_EVENTS[source.scenario] == list(source.initial + source.late)
+    assert len(SCENARIO_EVENTS["07_replay"]) == 10
 
 
 def test_insert_sql_escapes_strings() -> None:

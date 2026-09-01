@@ -65,10 +65,10 @@ cd lakeflow-auto-cdc-torture-test
 make setup   # validates and deploys the bundle
 make test    # captures a baseline, appends late/replay rows, verifies both phases
 make results # regenerates the summary matrix and figures
-make cleanup # drops schema and destroys the bundle
+make cleanup CONFIRM_SCHEMA=auto_cdc_torture_test # drops schema and destroys the bundle
 ```
 
-The default schema is `auto_cdc_torture_test`. Cleanup requires an exact confirmation and refuses cascading deletion outside the `auto_cdc_torture` schema prefix.
+The default schema is `auto_cdc_torture_test`. Cleanup requires a separately supplied exact confirmation and refuses cascading deletion outside the `auto_cdc_torture` schema prefix. The Makefile does not derive that confirmation from the target schema.
 
 ## Read next
 

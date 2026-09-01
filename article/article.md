@@ -190,7 +190,7 @@ A `customer` has `email='x@example.com'`. The next CDC event updates `city='Ista
 
 Databricks documents that `IGNORE NULL UPDATES` retains an existing target value when the corresponding incoming value is `NULL`.
 
-Without this option, AUTO CDC applies the NULL without a log line, exception, or metric. Scenario 5A demonstrates the result. Use `IGNORE NULL UPDATES` when NULL means "absent"; leave it off when NULL means "set to NULL."
+Without this option, the run completed and the target email became `NULL`. Scenario 5A demonstrates the measured result. Use `IGNORE NULL UPDATES` when NULL means "absent"; leave it off when NULL means "set to NULL."
 
 ---
 
@@ -287,27 +287,26 @@ Bitemporal is the only context where `SYSTEM SEQUENCE BY` is honored. It is docu
 
 ## Summary matrix
 
-```
-Scenario                          Pipeline  Correct state  Ordering   Classification
-01_duplicate                      GREEN     YES            COMPLETE   HANDLED
-01_duplicate_replay               GREEN     YES            COMPLETE   HANDLED
-02_out_of_order                   GREEN     YES            COMPLETE   HANDLED
-02_out_of_order_scd2              GREEN     YES            COMPLETE   HANDLED
-03_seq_collision_a                GREEN     NO             AMBIGUOUS  AMBIGUOUS_ORDER
-03_seq_collision_b                GREEN     YES            AMBIGUOUS  AMBIGUOUS_ORDER
-03_seq_collision_b_struct         GREEN     YES            COMPLETE   HANDLED
-04_wrong_clock_ingest             GREEN     NO             COMPLETE   BUSINESS_SEMANTICS
-04_wrong_clock_source             GREEN     YES            COMPLETE   CONFIGURATION_DEPENDENT
-05_sparse_a                       GREEN     NO             COMPLETE   BUSINESS_SEMANTICS
-05_sparse_b                       GREEN     YES            COMPLETE   CONFIGURATION_DEPENDENT
-06_delete_late_scd1               GREEN     YES            COMPLETE   HANDLED
-06_delete_late_scd2               GREEN     YES            COMPLETE   HANDLED
-07_replay_scd1                    GREEN     YES            COMPLETE   HANDLED
-07_replay_scd2                    GREEN     YES            COMPLETE   HANDLED
-08_history_a                      GREEN     NO             COMPLETE   BUSINESS_SEMANTICS
-08_history_b                      GREEN     YES            COMPLETE   CONFIGURATION_DEPENDENT
-09_bitemporal                     GREEN     YES            COMPLETE   HANDLED
-```
+| Configuration | Pipeline | Business state | Ordering | Outcome |
+|---|---|---|---|---|
+| 1A Exact duplicate | Green | Yes | Complete | Handled |
+| 1B Duplicate after baseline | Green | Yes | Complete | Handled |
+| 2A Out of order, SCD1 | Green | Yes | Complete | Handled |
+| 2B Out of order, SCD2 | Green | Yes | Complete | Handled |
+| 3A Sequence collision | Green | No | Ambiguous | Ambiguous order |
+| 3B Tie-breaker not configured | Green | Yes | Ambiguous | Ambiguous order |
+| 3C Composite sequence | Green | Yes | Complete | Handled |
+| 4A Ingestion-time order | Green | No | Complete | Business semantics |
+| 4B Source-time order | Green | Yes | Complete | Configuration-dependent |
+| 5A Default NULL handling | Green | No | Complete | Business semantics |
+| 5B Ignore NULL updates | Green | Yes | Complete | Configuration-dependent |
+| 6A Delete then late event, SCD1 | Green | Yes | Complete | Handled |
+| 6B Delete then late event, SCD2 | Green | Yes | Complete | Handled |
+| 7A Full replay, SCD1 | Green | Yes | Complete | Handled |
+| 7B Full replay, SCD2 | Green | Yes | Complete | Handled |
+| 8A Track every column | Green | No | Complete | Business semantics |
+| 8B Exclude sync timestamp | Green | Yes | Complete | Configuration-dependent |
+| 9 Bitemporal history | Green | Yes | Complete | Handled |
 
 ![All 18 measured configurations grouped by handled, configuration-dependent, business-semantics, and ambiguous-order outcomes.](../results/figures/summary_matrix.png)
 

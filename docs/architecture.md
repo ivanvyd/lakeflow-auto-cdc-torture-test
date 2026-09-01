@@ -120,7 +120,7 @@ This layering is what makes the experiment *reproducible* in the strict sense: e
 
 ## Boundaries
 
-- Cleanup requires an exact schema confirmation and refuses `CASCADE` outside the `auto_cdc_torture` schema prefix.
+- Cleanup requires a separately supplied exact schema confirmation and refuses `CASCADE` outside the `auto_cdc_torture` schema prefix.
 - The bundle is bounded to the `auto_cdc_torture_pipeline` resource. `databricks bundle destroy` removes it.
 - Direct Python and test dependencies are pinned in `pyproject.toml`.
 - The Databricks CLI is the only authentication path. No PATs, no OAuth tokens, no service principals in the repo.

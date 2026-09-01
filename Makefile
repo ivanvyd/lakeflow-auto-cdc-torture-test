@@ -4,6 +4,7 @@ PROFILE ?= DEFAULT
 BUNDLE_TARGET ?= dev
 CATALOG ?= workspace
 SCHEMA ?= auto_cdc_torture_test
+CONFIRM_SCHEMA ?=
 
 DATABRICKS_FLAGS := --profile $(PROFILE)
 BUNDLE_FLAGS := -t $(BUNDLE_TARGET) $(DATABRICKS_FLAGS) --var="catalog=$(CATALOG)" --var="schema=$(SCHEMA)"
@@ -14,7 +15,7 @@ help:
 	@echo "  make setup    - Validate and deploy the Databricks bundle."
 	@echo "  make test     - Run the initial and late/replay phases, then verify live targets."
 	@echo "  make results  - Normalize results, build summary matrix and figures."
-	@echo "  make cleanup  - Drop schema and destroy the bundle."
+	@echo "  make cleanup CONFIRM_SCHEMA=$(SCHEMA) - Drop schema and destroy the bundle."
 
 .PHONY: setup
 setup: bundle_setup
@@ -70,5 +71,7 @@ results: normalize
 
 .PHONY: cleanup
 cleanup:
+	@if [ -z "$(CONFIRM_SCHEMA)" ]; then echo "Set CONFIRM_SCHEMA=$(SCHEMA) to authorize cleanup."; exit 1; fi
+	@if [ "$(CONFIRM_SCHEMA)" != "$(SCHEMA)" ]; then echo "CONFIRM_SCHEMA must exactly match SCHEMA."; exit 1; fi
 	$(DATABRICKS) bundle destroy --auto-approve $(BUNDLE_FLAGS)
-	$(PYTHON) -m src.analysis.cleanup --profile $(PROFILE) --catalog $(CATALOG) --schema $(SCHEMA) --confirm-schema $(SCHEMA)
+	$(PYTHON) -m src.analysis.cleanup --profile $(PROFILE) --catalog $(CATALOG) --schema $(SCHEMA) --confirm-schema $(CONFIRM_SCHEMA)

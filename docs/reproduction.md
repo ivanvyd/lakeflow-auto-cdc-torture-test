@@ -44,7 +44,7 @@ The four commands you actually need:
 make setup      # validates and deploys the bundle
 make test       # runs the initial and late/replay phases, then verifies live targets
 make results    # <1 min.  regenerates the summary matrix and figures
-make cleanup    # ~1 min.  drops schema and destroys the bundle
+make cleanup CONFIRM_SCHEMA=auto_cdc_torture_test # ~1 min.  drops schema and destroys the bundle
 ```
 
 ### What `make setup` does
@@ -76,7 +76,7 @@ The result-generation step does not mutate source or target tables.
 - `databricks bundle destroy --auto-approve -t dev` — destroys the pipeline and any other bundle resources.
 - `DROP SCHEMA workspace.auto_cdc_torture_test CASCADE` — drops every table the experiment created.
 
-The Python cleanup command requires `--confirm-schema` to match `--schema` exactly and refuses cascading deletion unless the schema starts with `auto_cdc_torture`. The default is `auto_cdc_torture_test`; custom runs must use an equally isolated prefixed schema.
+The Make target requires `CONFIRM_SCHEMA` to be supplied independently and to match `SCHEMA` exactly before either destructive command runs. The Python cleanup command repeats that check and refuses cascading deletion unless the schema starts with `auto_cdc_torture`. The default is `auto_cdc_torture_test`; custom runs must use an equally isolated prefixed schema.
 
 ## Running a single scenario
 
