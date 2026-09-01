@@ -105,11 +105,6 @@ def scenario_01_duplicate() -> list[CdcEvent]:
     return [_event(status="ACTIVE", source_seconds=0, source_sequence=10, ingested_seconds=0)]
 
 
-def scenario_01_duplicate_replay() -> list[CdcEvent]:
-    """The same logical event delivered twice: once, then replayed."""
-    return scenario_01_duplicate() + scenario_01_duplicate()
-
-
 # ---------------------------------------------------------------------------
 # Scenario 2 — valid out-of-order
 # ---------------------------------------------------------------------------

@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from src.generators.dispatch import (
     CdcEvent,
     scenario_01_duplicate,
-    scenario_01_duplicate_replay,
     scenario_02_out_of_order,
     scenario_03_seq_collision_a,
     scenario_03_seq_collision_b,
@@ -91,19 +90,18 @@ SOURCE_SPECS = (
     _source("09_bitemporal", "s09_bitemporal_src", scenario_09_bitemporal()),
 )
 
-SCENARIO_EVENTS = {
-    "01_duplicate": scenario_01_duplicate(),
-    "01_duplicate_replay": scenario_01_duplicate_replay(),
-    "02_out_of_order": scenario_02_out_of_order(),
-    "03_seq_collision_a": scenario_03_seq_collision_a(),
-    "03_seq_collision_b": scenario_03_seq_collision_b(),
-    "04_wrong_clock": scenario_04_wrong_clock(),
-    "05_sparse": scenario_05_sparse(),
-    "06_delete_late": scenario_06_delete_late(),
-    "07_replay": scenario_07_replay(),
-    "08_history": scenario_08_history(),
-    "09_bitemporal": scenario_09_bitemporal(),
-}
+
+def _derive_scenario_events() -> dict[str, list[CdcEvent]]:
+    payloads: dict[str, tuple[CdcEvent, ...]] = {}
+    for spec in SOURCE_SPECS:
+        payload = spec.initial + spec.late
+        existing = payloads.setdefault(spec.scenario, payload)
+        if existing != payload:
+            raise ValueError(f"sources for {spec.scenario} do not share one logical event payload")
+    return {scenario: list(events) for scenario, events in payloads.items()}
+
+
+SCENARIO_EVENTS = _derive_scenario_events()
 
 INITIAL_ROWS_BY_SOURCE = {spec.source: list(spec.initial) for spec in SOURCE_SPECS}
 LATE_ROWS_BY_SOURCE = {spec.source: list(spec.late) for spec in SOURCE_SPECS if spec.late}
@@ -413,6 +411,26 @@ EXPECTED_LATE_PHASE_CHANGES = frozenset(
 )
 FLOW_BY_TARGET = {spec.target: spec for spec in FLOW_SPECS}
 CLASSIFICATION_BY_SCENARIO = {spec.scenario: spec.classification for spec in FLOW_SPECS}
+DISPLAY_NAME_BY_SCENARIO = {
+    "01_duplicate": "1A Exact duplicate",
+    "01_duplicate_replay": "1B Duplicate after baseline",
+    "02_out_of_order": "2A Out of order, SCD1",
+    "02_out_of_order_scd2": "2B Out of order, SCD2",
+    "03_seq_collision_a": "3A Sequence collision",
+    "03_seq_collision_b": "3B Tie-breaker not configured",
+    "03_seq_collision_b_struct": "3C Composite sequence",
+    "04_wrong_clock_ingest": "4A Ingestion-time order",
+    "04_wrong_clock_source": "4B Source-time order",
+    "05_sparse_a": "5A Default NULL handling",
+    "05_sparse_b": "5B Ignore NULL updates",
+    "06_delete_late_scd1": "6A Delete then late event, SCD1",
+    "06_delete_late_scd2": "6B Delete then late event, SCD2",
+    "07_replay_scd1": "7A Full replay, SCD1",
+    "07_replay_scd2": "7B Full replay, SCD2",
+    "08_history_a": "8A Track every column",
+    "08_history_b": "8B Exclude sync timestamp",
+    "09_bitemporal": "9 Bitemporal history",
+}
 
 
 def validate_registry() -> None:
@@ -427,6 +445,9 @@ def validate_registry() -> None:
         raise ValueError(f"flow sources are not registered: {missing_sources}")
     if len(FLOW_SPECS) != 18:
         raise ValueError(f"expected 18 flow configurations, got {len(FLOW_SPECS)}")
+    scenarios = {spec.scenario for spec in FLOW_SPECS}
+    if set(DISPLAY_NAME_BY_SCENARIO) != scenarios:
+        raise ValueError("display names must cover every flow scenario exactly")
 
 
 validate_registry()

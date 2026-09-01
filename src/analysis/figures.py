@@ -17,6 +17,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+from src.scenario_specs import DISPLAY_NAME_BY_SCENARIO
+
 RESULTS_DIR = Path(__file__).resolve().parent.parent.parent / "results"
 NORM_DIR = RESULTS_DIR / "normalized"
 RAW_DIR = RESULTS_DIR / "raw"
@@ -33,9 +35,10 @@ def _load_matrix():
 
 
 def figure_summary_matrix(matrix) -> Path:
-    fig, ax = plt.subplots(figsize=(11, 6))
-    scenarios = [m["scenario"] for m in matrix]
+    fig, ax = plt.subplots(figsize=(12, 7))
+    scenarios = [DISPLAY_NAME_BY_SCENARIO[m["scenario"]] for m in matrix]
     classifications = [m["classification"] for m in matrix]
+    display_classifications = [value.replace("_", " ").title() for value in classifications]
     palette = {
         "HANDLED": "#2a9d8f",
         "CONFIGURATION_DEPENDENT": "#e9c46a",
@@ -44,7 +47,7 @@ def figure_summary_matrix(matrix) -> Path:
     }
     colors = [palette.get(c, "#999") for c in classifications]
     ax.barh(scenarios, [1] * len(scenarios), color=colors, edgecolor="black")
-    for i, c in enumerate(classifications):
+    for i, c in enumerate(display_classifications):
         ax.text(0.01, i, c, va="center", color="black", fontsize=8)
     ax.set_xlabel("Classified outcome")
     ax.set_xlim(0, 1)

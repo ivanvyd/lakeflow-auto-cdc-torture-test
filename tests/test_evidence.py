@@ -54,6 +54,19 @@ def test_raw_results_use_current_evidence_schema() -> None:
     assert all("documented_contract_valid" not in row for row in rows)
 
 
+def test_local_package_does_not_install_managed_spark_runtime() -> None:
+    pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    assert '"pyspark' not in pyproject
+    assert '"delta-spark' not in pyproject
+
+
+def test_make_cleanup_requires_independent_confirmation() -> None:
+    makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
+    assert "CONFIRM_SCHEMA ?=" in makefile
+    assert "--confirm-schema $(CONFIRM_SCHEMA)" in makefile
+    assert "--confirm-schema $(SCHEMA)" not in makefile
+
+
 def test_baseline_validation_requires_every_registered_target() -> None:
     targets = {target: {} for target in TARGET_NAMES}
     targets.pop("s02_out_of_order_scd2_tgt")
