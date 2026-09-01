@@ -400,8 +400,8 @@ The full reproduction guide is in `docs/reproduction.md`. Sources for every clai
 
 ## Verification (last full end-to-end run)
 
-The latest evidence uses pipeline `1ff99f04-078f-4c91-97e3-f06ad7614f7f`. Full-refresh update `7b0c5f84-0691-4a99-afa5-f8df9e73318d` established the baseline. Incremental update `65a16199-93b3-4a6e-a08e-95ecf92c3763` processed the late and replay rows. Both completed.
+The latest evidence uses pipeline `1ff99f04-078f-4c91-97e3-f06ad7614f7f`. Full-refresh update `76337b92-46fd-445d-b929-7a85aa038471` established the baseline. Incremental update `d14e5ff1-b840-4e14-affd-902ec98f9fdf` processed the late and replay rows. Both completed.
 
 `capture_baseline.py` saved every target after the full refresh. `write_results.py` captured them again after the incremental update. Sixteen targets remained identical; only the two expected SCD2 histories changed. The verifier then checked row counts and scenario-specific state predicates for all 18 targets. Scenario 9's predicate matches all five valid-time and system-time intervals, not only the count. The resulting classification is 10 `HANDLED`, 3 `CONFIGURATION_DEPENDENT`, 3 `BUSINESS_SEMANTICS`, and 2 `AMBIGUOUS_ORDER`.
 
-The checked-in evidence includes `baseline_target_state.json`, `target_state.json`, the 18-row summary, and four figures. The bitemporal figure reads the captured rows directly. A clean checkout of the public feature branch must repeat the workflow before merge; that release gate is separate from this working-tree run.
+The checked-in evidence includes `baseline_target_state.json`, `target_state.json`, the 18-row summary, and four figures. The bitemporal figure reads the captured rows directly. The release run cloned the public `release/article-evidence` branch at execution commit `01d53b4`, installed its pinned dependencies in a new virtual environment, and repeated `setup`, `test`, and `results` before merge.

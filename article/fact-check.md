@@ -9,8 +9,9 @@ gate unless both pipeline updates complete and every verifier assertion passes.
 | Evidence | Current value |
 |---|---|
 | Pipeline | `1ff99f04-078f-4c91-97e3-f06ad7614f7f` |
-| Baseline full refresh | `7b0c5f84-0691-4a99-afa5-f8df9e73318d`, `COMPLETED` |
-| Late/replay incremental update | `65a16199-93b3-4a6e-a08e-95ecf92c3763`, `COMPLETED` |
+| Baseline full refresh | `76337b92-46fd-445d-b929-7a85aa038471`, `COMPLETED` |
+| Late/replay incremental update | `d14e5ff1-b840-4e14-affd-902ec98f9fdf`, `COMPLETED` |
+| Clean-checkout execution source | Public branch `release/article-evidence`, commit `01d53b4` |
 | Baseline target snapshot | `results/raw/baseline_target_state.json` |
 | Before/after target evidence | `results/raw/target_state.json` |
 | Verified result rows | `results/raw/scenario_results.json`, 18 rows |
