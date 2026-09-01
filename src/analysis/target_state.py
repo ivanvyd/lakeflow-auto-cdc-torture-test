@@ -33,8 +33,10 @@ class SqlExecutor:
         )
         if statement.status.state != StatementState.SUCCEEDED:
             raise RuntimeError(f"SQL statement failed: {statement.status.error}")
-        columns = [column.name for column in statement.manifest.schema.columns]
-        return QueryResult(columns=columns, rows=statement.result.data_array or [])
+        schema = statement.manifest.schema if statement.manifest is not None else None
+        columns = [column.name for column in schema.columns] if schema is not None else []
+        rows = statement.result.data_array if statement.result is not None else []
+        return QueryResult(columns=columns, rows=rows or [])
 
 
 def require_completed_update(
