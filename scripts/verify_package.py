@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import tomllib
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 from setuptools.discovery import PackageFinder, PEP420PackageFinder
 
 cfg = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
