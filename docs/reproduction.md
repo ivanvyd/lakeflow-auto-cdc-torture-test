@@ -73,10 +73,10 @@ The result-generation step does not mutate source or target tables.
 
 ### What `make cleanup` does
 
-- `databricks bundle destroy -t dev` — destroys the pipeline and any other bundle resources.
+- `databricks bundle destroy --auto-approve -t dev` — destroys the pipeline and any other bundle resources.
 - `DROP SCHEMA workspace.auto_cdc_torture_test CASCADE` — drops every table the experiment created.
 
-`make cleanup` is bounded to the `auto_cdc_torture_test` schema and the bundle's resources. It does not touch any other schema in the catalog.
+The Python cleanup command requires `--confirm-schema` to match `--schema` exactly and refuses cascading deletion unless the schema starts with `auto_cdc_torture`. The default is `auto_cdc_torture_test`; custom runs must use an equally isolated prefixed schema.
 
 ## Running a single scenario
 
@@ -131,6 +131,8 @@ The DAB references `${var.catalog}` (default `workspace`). If your workspace doe
 make setup CATALOG=<your-catalog> BUNDLE_TARGET=dev PROFILE=DEFAULT
 make test CATALOG=<your-catalog> BUNDLE_TARGET=dev PROFILE=DEFAULT
 ```
+
+Use only an isolated schema whose name starts with `auto_cdc_torture`, especially when overriding the catalog.
 
 ## Time budget
 

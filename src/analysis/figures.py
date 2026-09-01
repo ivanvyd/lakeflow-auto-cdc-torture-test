@@ -63,7 +63,7 @@ def figure_scd2_noise(matrix) -> Path | None:
     if not rows:
         return None
     fig, ax = plt.subplots(figsize=(7, 4))
-    names = [r["configuration"].replace("s08_", "").replace("_scd2_tgt", "") for r in rows]
+    names = ["Track every column", "Exclude last_synced_at"]
     counts = [int(r["target_rows"]) for r in rows]
     ax.bar(names, counts, color=["#e76f51", "#2a9d8f"], edgecolor="black")
     for i, c in enumerate(counts):
@@ -176,7 +176,7 @@ def figure_wrong_clock(matrix) -> Path | None:
             r["correct_state"],
             ha="center",
             va="center",
-            color="white",
+            color="black",
             fontsize=12,
             fontweight="bold",
         )

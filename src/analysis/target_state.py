@@ -43,6 +43,8 @@ def require_completed_update(
     workspace: WorkspaceClient,
     pipeline_id: str,
     update_id: str,
+    *,
+    expected_full_refresh: bool | None = None,
 ) -> None:
     response = workspace.pipelines.get_update(
         pipeline_id=pipeline_id,
@@ -52,6 +54,13 @@ def require_completed_update(
     state = update.state.value if update is not None and update.state is not None else None
     if state != "COMPLETED":
         raise RuntimeError(f"update {update_id} has state {state!r}; expected 'COMPLETED'")
+    if expected_full_refresh is not None:
+        full_refresh = update.full_refresh if update is not None else None
+        if full_refresh is not expected_full_refresh:
+            raise RuntimeError(
+                f"update {update_id} has full_refresh={full_refresh!r}; "
+                f"expected {expected_full_refresh!r}"
+            )
 
 
 def capture_targets(

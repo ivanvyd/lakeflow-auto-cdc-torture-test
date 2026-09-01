@@ -14,19 +14,20 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import sys
 import time
 
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.sql import StatementState
 
+from src.analysis.target_state import SqlExecutor
 from src.generators.dispatch import (
+    SOURCE_SCHEMA_DDL,
+    _rows_to_insert_sql,
+)
+from src.scenario_specs import (
     INITIAL_ROWS_BY_SOURCE,
     LATE_ROWS_BY_SOURCE,
-    SCENARIOS,
-    SOURCE_SCHEMA_DDL,
+    SCENARIO_EVENTS,
     SOURCE_TABLE_FOR_SCENARIO,
-    _rows_to_insert_sql,
 )
 from src.sql_identifiers import qualified_name, quote_identifier
 
@@ -36,26 +37,15 @@ def main() -> None:
     parser.add_argument("--profile", required=True)
     parser.add_argument("--catalog", required=True)
     parser.add_argument("--schema", default="auto_cdc_torture_test")
-    parser.add_argument("--scenario", choices=sorted(SCENARIOS), default=None)
+    parser.add_argument("--scenario", choices=sorted(SCENARIO_EVENTS), default=None)
     parser.add_argument("--phase", choices=("initial", "late"), default="initial")
     args = parser.parse_args()
 
     w = WorkspaceClient(profile=args.profile)
-    warehouses = list(w.warehouses.list())
-    if not warehouses:
-        print("no SQL warehouse available", file=sys.stderr)
-        raise SystemExit(1)
-    wh = warehouses[0]
+    executor = SqlExecutor(w)
 
     def exec(sql: str) -> None:
-        stmt = w.statement_execution.execute_statement(
-            warehouse_id=wh.id,
-            statement=sql,
-            wait_timeout="50s",
-        )
-        if stmt.status.state != StatementState.SUCCEEDED:
-            print(f"FAILED: {sql[:200]} -> {stmt.status.error}", file=sys.stderr)
-            raise SystemExit(1)
+        executor.query(sql)
         # Rate-limit between warehouse statements.
         time.sleep(0.3)
 

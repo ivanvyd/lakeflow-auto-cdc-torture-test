@@ -4,7 +4,7 @@
 
 A reproducible engineering experiment that feeds Lakeflow `AUTO CDC` nine hostile CDC streams and records what it handles, where configuration matters, where ordering is ambiguous, and which decisions belong to the business domain.
 
-This repository is the experiment. The article at `article/article.md` is the report.
+This repository is the experiment. The [full article](article/article.md) is the report.
 
 ## What this is not
 
@@ -36,11 +36,12 @@ Each scenario ships with a generator, a deterministic assertion, and a measured 
 
 ```
 src/
+  scenario_specs.py Canonical sources, flows, expected states, and predicates
   pipeline/        Lakeflow Declarative Pipelines definitions
   generators/      Deterministic events and two-phase materialization
   analysis/        Live verification, target snapshots, normalization, figures
 scenarios/
-  01_duplicate/    Per-scenario Python entry points + per-scenario target spec
+  01_duplicate/    Per-scenario explanation and expected result
   02_out_of_order/
   ...
 results/           Before/after target rows, normalized results, and figures
@@ -67,15 +68,15 @@ make results # regenerates the summary matrix and figures
 make cleanup # drops schema and destroys the bundle
 ```
 
-All resource names start with `auto_cdc_torture_` and the schema is `auto_cdc_torture_test`. Cleanup is bounded to that schema and the bundle's resources.
+The default schema is `auto_cdc_torture_test`. Cleanup requires an exact confirmation and refuses cascading deletion outside the `auto_cdc_torture` schema prefix.
 
 ## Read next
 
-- `article/article.md` — the full write-up
-- `article/fact-check.md` — claim-by-claim evidence ledger
-- `docs/sources.md` — every official Databricks doc URL we relied on
-- `docs/reproduction.md` — exact steps to reproduce the experiment
+- [Full article](article/article.md)
+- [Claim-by-claim evidence ledger](article/fact-check.md)
+- [Official source ledger](docs/sources.md)
+- [Reproduction guide](docs/reproduction.md)
 
 ## Safety
 
-The experiment runs in a dedicated schema (`auto_cdc_torture_test`) and never references production catalogs. User-supplied catalog and schema names are validated before entering SQL. No PATs, passwords, or workspace identifiers are committed. Authentication is through the Databricks CLI profile.
+The default run uses a dedicated schema (`auto_cdc_torture_test`) in the `workspace` catalog. Catalog and schema overrides are explicit, so point them only at an isolated experiment namespace. User-supplied identifiers are validated before entering SQL. No PATs, passwords, or workspace identifiers are committed. Authentication is through the Databricks CLI profile.

@@ -7,17 +7,18 @@ authors = [
     { name = "Ivan Vydrin" },
 ]
 dependencies = [
-    "databricks-sdk>=0.20.0",
-    "delta-spark>=3.0.0",
-    "matplotlib>=3.8.0",
-    "pyspark>=3.5.0",
+    "databricks-sdk==0.133.0",
+    "delta-spark==4.4.0",
+    "matplotlib==3.10.8; python_version < '3.11'",
+    "matplotlib==3.11.1; python_version >= '3.11'",
+    "pyspark==4.2.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.0.0",
-    "pytest-cov>=5.0.0",
-    "ruff>=0.6.0",
+    "pytest==9.1.1",
+    "pytest-cov==7.1.0",
+    "ruff==0.16.5",
 ]
 
 [tool.pytest.ini_options]

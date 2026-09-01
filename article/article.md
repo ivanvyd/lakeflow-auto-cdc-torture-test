@@ -167,6 +167,8 @@ Pipeline picks 10:05 as the latest event. Final state: `SUSPENDED`. Pipeline gre
 
 > Out-of-order handling cannot choose the authoritative clock. If the business treats `source_updated_at` as the definition of "newer," use it in `SEQUENCE BY`. Ingestion time represents arrival order, which diverges from source time during batching, retries, and backfills.
 
+![Two AUTO CDC targets show that ingestion time misses the business expectation while source time matches it.](../results/figures/wrong_clock.png)
+
 The two configurations use the same flow, data, and target schema. Changing only `SEQUENCE BY` changes the answer from wrong to right.
 
 ---
@@ -254,6 +256,8 @@ Databricks documents `TRACK HISTORY ON * EXCEPT` for excluding columns from hist
 
 Many CDC sources update operational timestamps on each sync. Default SCD2 tracking then records those changes as new versions. Decide which columns carry business history before deploying the flow.
 
+![Tracking every column produces 51 SCD2 rows; excluding last_synced_at produces one.](../results/figures/scd2_history_noise.png)
+
 ---
 
 ## Scenario 9: bitemporal (Beta)
@@ -265,7 +269,9 @@ The target table carries *two* pairs of timestamps:
 - `__START_AT` / `__END_AT`: business time, derived from `SEQUENCE BY` (`source_updated_at`).
 - `__SYSTEM_START_AT` / `__SYSTEM_END_AT`: system time, derived from `SYSTEM SEQUENCE BY` (`ingested_at`).
 
-Measured: 5 history rows, both pairs populated. **HANDLED.** A picture: `results/figures/bitemporal_timeline.png`.
+Measured: 5 history rows, both pairs populated. **HANDLED.**
+
+![Five measured bitemporal rows show original and corrected beliefs across three system times.](../results/figures/bitemporal_timeline.png)
 
 The target has five rows because later events revise what the system knows about earlier valid-time intervals. With three events arriving at system times 60s, 180s, and 300s:
 
@@ -303,7 +309,9 @@ Scenario                          Pipeline  Correct state  Ordering   Classifica
 09_bitemporal                     GREEN     YES            COMPLETE   HANDLED
 ```
 
-A picture: `results/figures/summary_matrix.png`. Per-scenario breakdowns: `results/figures/scd2_history_noise.png` (scenario 8), `results/figures/wrong_clock.png` (scenario 4), and `results/figures/bitemporal_timeline.png` (scenario 9).
+![All 18 measured configurations grouped by handled, configuration-dependent, business-semantics, and ambiguous-order outcomes.](../results/figures/summary_matrix.png)
+
+The machine-readable matrix is in [`results/normalized/summary_matrix.json`](../results/normalized/summary_matrix.json), with the captured target rows in [`results/raw/target_state.json`](../results/raw/target_state.json).
 
 ---
 

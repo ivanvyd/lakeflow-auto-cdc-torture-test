@@ -2,6 +2,11 @@ import json
 from collections import Counter
 from pathlib import Path
 
+import pytest
+
+from src.analysis.write_results import validate_baseline_payload
+from src.scenario_specs import TARGET_NAMES
+
 ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -47,3 +52,27 @@ def test_raw_results_use_current_evidence_schema() -> None:
     assert len(rows) == 18
     assert all("ordering_complete" in row for row in rows)
     assert all("documented_contract_valid" not in row for row in rows)
+
+
+def test_baseline_validation_requires_every_registered_target() -> None:
+    targets = {target: {} for target in TARGET_NAMES}
+    targets.pop("s02_out_of_order_scd2_tgt")
+    baseline = {
+        "pipeline_id": "pipeline",
+        "update_id": "baseline",
+        "targets": targets,
+    }
+
+    with pytest.raises(ValueError, match="s02_out_of_order_scd2_tgt"):
+        validate_baseline_payload(baseline, "pipeline", "late")
+
+
+def test_baseline_validation_requires_distinct_update_ids() -> None:
+    baseline = {
+        "pipeline_id": "pipeline",
+        "update_id": "same-update",
+        "targets": {target: {} for target in TARGET_NAMES},
+    }
+
+    with pytest.raises(ValueError, match="must differ"):
+        validate_baseline_payload(baseline, "pipeline", "same-update")

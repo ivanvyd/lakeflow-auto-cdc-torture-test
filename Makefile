@@ -71,4 +71,4 @@ results: normalize
 .PHONY: cleanup
 cleanup:
 	$(DATABRICKS) bundle destroy --auto-approve $(BUNDLE_FLAGS)
-	$(PYTHON) -m src.analysis.cleanup --profile $(PROFILE) --catalog $(CATALOG) --schema $(SCHEMA)
+	$(PYTHON) -m src.analysis.cleanup --profile $(PROFILE) --catalog $(CATALOG) --schema $(SCHEMA) --confirm-schema $(SCHEMA)

@@ -14,7 +14,7 @@ from src.analysis.target_state import (
     capture_targets,
     require_completed_update,
 )
-from src.analysis.write_results import CONFIGURATIONS
+from src.scenario_specs import TARGET_NAMES
 
 DEFAULT_OUTPUT = (
     Path(__file__).resolve().parent.parent.parent / "results" / "raw" / "baseline_target_state.json"
@@ -32,12 +32,17 @@ def main() -> None:
     args = parser.parse_args()
 
     workspace = WorkspaceClient(profile=args.profile)
-    require_completed_update(workspace, args.pipeline_id, args.update_id)
+    require_completed_update(
+        workspace,
+        args.pipeline_id,
+        args.update_id,
+        expected_full_refresh=True,
+    )
     targets = capture_targets(
         SqlExecutor(workspace),
         args.catalog,
         args.schema,
-        CONFIGURATIONS,
+        list(TARGET_NAMES),
     )
     payload = {
         "pipeline_id": args.pipeline_id,

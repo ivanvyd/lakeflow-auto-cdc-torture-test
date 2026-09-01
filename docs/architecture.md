@@ -19,13 +19,12 @@ The diagram, the wiring, and the boundaries.
    │           ▲                            └────────────────────┘  │
    │           │                                       │           │
    │   ┌───────┴────────┐                              ▼           │
-   │   │ dispatch.py    │                  ┌────────────────────┐  │
-   │   │ (generator)    │                  │ sNN_xxx_tgt        │  │
+   │   │ scenario_specs │                  ┌────────────────────┐  │
+   │   │ + dispatch.py  │                  │ sNN_xxx_tgt        │  │
    │   │                │                  │ Delta streaming    │  │
-   │   │ Generates CDC  │                  │ table (SCD1 / SCD2 │  │
-   │   │ rows for one   │                  │  / bitemporal)     │  │
-   │   │ scenario at a  │                  └────────────────────┘  │
-   │   │ time           │                              │           │
+   │   │ Typed events,  │                  │ table (SCD1 / SCD2 │  │
+   │   │ flow settings, │                  │  / bitemporal)     │  │
+   │   │ evidence rules │                  └────────────────────┘  │
    │   └────────────────┘                              │           │
    │           ▲                                       │           │
    │           │           ┌──────────────────────────┐           │
@@ -52,7 +51,7 @@ The diagram, the wiring, and the boundaries.
 
 ### 1. Generators (`src/generators/dispatch.py`)
 
-Pure Python. No Spark, no Databricks SDK. Each `scenario_NN_xxx` function returns rows that match the canonical source schema. The generators use fixed timestamps and contain no randomness.
+Pure Python. No Spark, no Databricks SDK. Each `scenario_NN_xxx` function returns typed `CdcEvent` values. The source DDL and explicit INSERT column list are derived from the same `SOURCE_SCHEMA`, so column order cannot drift silently. The generators use fixed timestamps and contain no randomness.
 
 The dispatcher CLI is `python -m src.generators.dispatch --scenario <key> [--output <file>]`. It materializes the generator output to JSON.
 
@@ -62,7 +61,7 @@ The dispatcher CLI is `python -m src.generators.dispatch --scenario <key> [--out
 
 1. `DROP TABLE IF EXISTS sNN_xxx_src` on the workspace catalog.
 2. `CREATE TABLE sNN_xxx_src (...) USING DELTA` with the canonical CDC schema.
-3. `INSERT INTO sNN_xxx_src VALUES (...)` with the generator's rows.
+3. `INSERT INTO sNN_xxx_src (<canonical columns>) VALUES (...)` with the generator's rows.
 
 The initial phase withholds four streams. After a full refresh and baseline capture, the late phase appends those rows and an incremental update processes them. This creates a real update boundary for late-arrival and replay claims.
 
@@ -72,9 +71,9 @@ For every source, the pipeline declares a `@dp.view` that obtains the active Spa
 
 The generator materializes the source as a plain Delta table, and the pipeline sees it as a stream. The pipeline never knows the source was generated rather than streamed.
 
-### 4. AUTO CDC flow (`src/pipeline/pipeline.py`)
+### 4. Scenario registry and AUTO CDC flow (`src/scenario_specs.py`, `src/pipeline/pipeline.py`)
 
-One or more `create_auto_cdc_flow` calls per source, depending on the scenario. The flows vary along these axes:
+`FLOW_SPECS` is the canonical 18-configuration registry. It owns source/target names, flow options, phase expectations, live predicates, row counts, and classifications. The pipeline translates each entry into one `create_auto_cdc_flow` call. The flows vary along these axes:
 
 - `keys=["customer_id"]` — always the same, every flow uses customer_id as the key.
 - `sequence_by=<col or struct>` — the heart of the experiment. Scenarios differ on this:
@@ -107,7 +106,7 @@ Four scripts participate:
 - `normalize.py` — reads `scenario_results` from the workspace, computes the classification, writes `results/normalized/summary_matrix.{json,md}`. Pure SDK; no Spark.
 - `figures.py` — produces four PNG figures. The bitemporal chart reads measured rows from `target_state.json`; the other charts read the normalized matrix.
 
-The `OBSERVED` list is the source of the human-readable summary, while `LIVE_ASSERTIONS` is the publication gate. If platform behavior changes, the verifier fails before replacing the evidence artifacts.
+The human-readable summary and live publication predicates come from the same `FlowSpec` entries that register the pipeline. If platform behavior changes, the verifier fails before replacing the evidence artifacts.
 
 ## Why this split?
 
@@ -121,9 +120,9 @@ This layering is what makes the experiment *reproducible* in the strict sense: e
 
 ## Boundaries
 
-- The experiment is bounded to the `auto_cdc_torture_test` schema. `make cleanup` is the only way to drop it.
+- Cleanup requires an exact schema confirmation and refuses `CASCADE` outside the `auto_cdc_torture` schema prefix.
 - The bundle is bounded to the `auto_cdc_torture_pipeline` resource. `databricks bundle destroy` removes it.
-- Direct Python dependency minimums are declared in `pyproject.toml`.
+- Direct Python and test dependencies are pinned in `pyproject.toml`.
 - The Databricks CLI is the only authentication path. No PATs, no OAuth tokens, no service principals in the repo.
 
 The Databricks workspace you point this at is the only thing that needs to exist outside your laptop. Everything else is in the repo.

@@ -10,12 +10,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from pathlib import Path
 
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.sql import StatementState
 
+from src.analysis.target_state import SqlExecutor
+from src.scenario_specs import CLASSIFICATION_BY_SCENARIO
 from src.sql_identifiers import qualified_name
 
 RESULTS_DIR = Path(__file__).resolve().parent.parent.parent / "results"
@@ -34,13 +34,6 @@ def _to_bool(v) -> bool:
     return str(v).strip().upper() in ("TRUE", "1", "T", "YES")
 
 
-CONFIGURATION_DEPENDENT = {
-    "04_wrong_clock_source",
-    "05_sparse_b",
-    "08_history_b",
-}
-
-
 def classify_result(
     scenario: str,
     ordering_complete: bool,
@@ -50,9 +43,7 @@ def classify_result(
         return "AMBIGUOUS_ORDER"
     if not business_passed:
         return "BUSINESS_SEMANTICS"
-    if scenario in CONFIGURATION_DEPENDENT:
-        return "CONFIGURATION_DEPENDENT"
-    return "HANDLED"
+    return CLASSIFICATION_BY_SCENARIO[scenario]
 
 
 def main() -> None:
@@ -66,26 +57,11 @@ def main() -> None:
     NORM_DIR.mkdir(parents=True, exist_ok=True)
 
     w = WorkspaceClient(profile=args.profile)
-    # Use the SQL warehouse for the result table
-    warehouses = list(w.warehouses.list())
-    if not warehouses:
-        print("no SQL warehouse available", file=sys.stderr)
-        sys.exit(1)
-    wh_id = warehouses[0].id
-
     sql = f"SELECT * FROM {qualified_name(args.catalog, args.schema, 'scenario_results')}"
-    stmt = w.statement_execution.execute_statement(
-        warehouse_id=wh_id,
-        statement=sql,
-        wait_timeout="50s",
-    )
-    if stmt.status.state != StatementState.SUCCEEDED:
-        print(f"query failed: {stmt.status.error}", file=sys.stderr)
-        sys.exit(1)
-
-    columns = [c.name for c in stmt.manifest.schema.columns]
+    result = SqlExecutor(w).query(sql)
+    columns = result.columns
     rows = []
-    for chunk in stmt.result.data_array or []:
+    for chunk in result.rows:
         rows.append(dict(zip(columns, chunk)))
 
     out_json = RAW_DIR / "scenario_results.json"
