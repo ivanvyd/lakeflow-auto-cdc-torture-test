@@ -45,6 +45,15 @@ def test_article_publication_assets_and_evidence_language() -> None:
     assert "Five green results needed intervention before production" in fact_check
 
 
+def test_readme_names_the_checked_in_evidence_fields() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    assert "DOCUMENTED_EXPECTATION" not in readme
+    assert "BUSINESS_EXPECTATION" not in readme
+    assert "OBSERVED_RESULT" not in readme
+    for field in ("ordering_complete", "business_assertion_passed", "expected", "observed"):
+        assert f"`{field}`" in readme
+
+
 def test_two_phase_evidence_covers_every_configuration() -> None:
     matrix = _json("results/normalized/summary_matrix.json")
     state = _json("results/raw/target_state.json")

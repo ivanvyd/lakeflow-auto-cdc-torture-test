@@ -417,7 +417,7 @@ Use bitemporal storage when source "as-of" time differs from ingest time and you
 - I did not stress test at volume. The dataset is tiny. The runtime characteristics of AUTO CDC at scale (backpressure, checkpointing, large `__END_AT` joins) are out of scope.
 - I did not test *partial* schema evolution. The schemas here are stable across all events.
 - I did not test multi-stream scenarios (e.g. a customer table joined to an orders table that arrives late). AUTO CDC is per-flow, and the join semantics depend on the surrounding pipeline.
-- I did not test the Beta `bitemporal` mode under load. It is documented as Beta for a reason.
+- I did not test the `bitemporal` mode under load. Databricks documents the mode as Beta.
 
 The repository issue tracker is the place to request partial schema evolution, multi-stream joins, or large-scale throughput tests.
 
@@ -444,7 +444,7 @@ The latest evidence uses pipeline `1ff99f04-078f-4c91-97e3-f06ad7614f7f`. Full-r
 
 `capture_baseline.py` saved every target after the full refresh. `write_results.py` captured them again after the incremental update. Sixteen targets remained identical; the two expected SCD2 histories changed. The verifier then checked row counts and scenario-specific state predicates for all 18 targets. Scenario 9's predicate matches all five valid-time and system-time intervals rather than the count alone. The resulting classification is 10 `HANDLED`, 3 `CONFIGURATION_DEPENDENT`, 3 `BUSINESS_SEMANTICS`, and 2 `AMBIGUOUS_ORDER`.
 
-The checked-in evidence includes `baseline_target_state.json`, `target_state.json`, the 18-row summary, and four figures. The bitemporal figure reads the captured rows. The release run cloned the public `release/article-evidence` branch at execution commit `01d53b4`, installed its pinned dependencies in a new virtual environment, and repeated `setup`, `test`, and `results` before merge.
+The checked-in evidence includes `baseline_target_state.json`, `target_state.json`, the 18-row summary, and four figures. The bitemporal figure reads the captured rows. The release run checked out PR #1's immutable head commit [`01d53b4`](https://github.com/ivanvyd/lakeflow-auto-cdc-torture-test/commit/01d53b4902ab91876b26193a96c0ce193c12237a), installed its pinned dependencies in a new virtual environment, and repeated `setup`, `test`, and `results` before merge.
 
 ## Test your own failure mode
 

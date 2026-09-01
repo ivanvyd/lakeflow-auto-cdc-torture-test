@@ -2,17 +2,13 @@
 
 [![CI](https://github.com/ivanvyd/lakeflow-auto-cdc-torture-test/actions/workflows/ci.yml/badge.svg)](https://github.com/ivanvyd/lakeflow-auto-cdc-torture-test/actions/workflows/ci.yml)
 
-A reproducible engineering experiment that feeds Lakeflow `AUTO CDC` nine hostile CDC streams and records what it handles, where configuration matters, where ordering is ambiguous, and which decisions belong to the business domain.
+A reproducible engineering experiment that feeds nine hostile CDC streams into Lakeflow `AUTO CDC` and records what it handles, where configuration matters, where ordering is ambiguous, and which decisions belong to the business domain.
 
 This repository is the experiment. The [full article](article/article.md) is the report.
 
-## What this is not
+## Scope
 
-- Not a tutorial on `AUTO CDC`.
-- Not a benchmark. The dataset is tiny on purpose; the experiment is about semantics.
-- Not a critique of `AUTO CDC`. The goal is to delineate the boundary between "Databricks capability" and "what only your domain can decide."
-
-## What this is
+This repository tests `AUTO CDC` semantics with a small deterministic dataset. It is an executable report rather than a tutorial or throughput benchmark. The goal is to separate Databricks behavior from the ordering, NULL, and history rules that your domain must define.
 
 Nine scenarios, each a small controlled CDC stream into a Lakeflow pipeline:
 
@@ -26,11 +22,14 @@ Nine scenarios, each a small controlled CDC stream into a Lakeflow pipeline:
 8. SCD2 history noise from operational fields
 9. Bitemporal history with separate valid and system time
 
-Each scenario ships with a generator, a deterministic assertion, and a measured result that distinguishes:
+Each configuration records:
 
-- `DOCUMENTED_EXPECTATION` — what the official Databricks documentation says
-- `BUSINESS_EXPECTATION` — what the scenario's domain logic wants
-- `OBSERVED_RESULT` — what the pipeline actually produced
+- `ordering_complete`: whether `SEQUENCE BY` orders conflicting business states without ties.
+- `business_assertion_passed`: whether the target matches the scenario's domain rule.
+- `expected` and `observed`: the intended and measured target states.
+- `target_rows` and `history_rows`: the measured target counts.
+
+The [fact-check ledger](article/fact-check.md) maps documentation claims to official Databricks sources and run-derived claims to captured target rows.
 
 ## Repository layout
 
@@ -54,7 +53,7 @@ docs/              sources.md, architecture.md, reproduction.md
 Requires:
 
 - A Databricks workspace with a `DEFAULT` CLI profile (`databricks auth login --host <workspace> --profile DEFAULT`).
-- A user with permission to create catalogs / schemas (or use an existing sandbox catalog).
+- A user with permission to use the target catalog and create an isolated schema.
 - Databricks CLI ≥ 0.292.0 (tested with 1.10.0).
 - A SQL warehouse and serverless compute enabled.
 - Python ≥ 3.10, GNU Make, and jq. On Windows, GNU Make may be named `mingw32-make`.

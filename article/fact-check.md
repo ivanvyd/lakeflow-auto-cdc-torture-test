@@ -11,7 +11,7 @@ gate unless both pipeline updates complete and every verifier assertion passes.
 | Pipeline | `1ff99f04-078f-4c91-97e3-f06ad7614f7f` |
 | Baseline full refresh | `76337b92-46fd-445d-b929-7a85aa038471`, `COMPLETED` |
 | Late/replay incremental update | `d14e5ff1-b840-4e14-affd-902ec98f9fdf`, `COMPLETED` |
-| Clean-checkout execution source | Public branch `release/article-evidence`, commit `01d53b4` |
+| Clean-checkout execution source | PR #1 head commit [`01d53b4`](https://github.com/ivanvyd/lakeflow-auto-cdc-torture-test/commit/01d53b4902ab91876b26193a96c0ce193c12237a) |
 | Baseline target snapshot | `results/raw/baseline_target_state.json` |
 | Before/after target evidence | `results/raw/target_state.json` |
 | Verified result rows | `results/raw/scenario_results.json`, 18 rows |
