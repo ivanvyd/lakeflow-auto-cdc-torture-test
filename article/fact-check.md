@@ -111,6 +111,54 @@ The official sources in `docs/sources.md` support these statements:
 The article labels run-derived behavior as observed evidence and does not
 promote it to a documented platform guarantee.
 
+## Databricks Technical Blog submission audit
+
+Reviewed on 2026-09-01 against the official [Content Guidelines for the
+Databricks Community Technical
+Blog](https://community.databricks.com/t5/announcements/content-guidelines-for-the-databricks-community-technical-blog/td-p/162112).
+This audit covers the requirements stated on the public page. Its linked
+attachment was not available to an unsigned automated reader, so any
+attachment-only formatting or submission requirements still need a final
+manual check in the Community editor.
+
+| Guideline | Article evidence | Verdict |
+|---|---|---|
+| Real technical content | Nine source scenarios, 18 flow configurations, runnable code, exact target rows, and two pipeline updates. | Meets |
+| Honest reflection | The article identifies five green configurations the author would not ship and separates product behavior from domain choices. | Meets |
+| Practical takeaways | Each scenario ends with a production rule; the article also provides a new-stream checklist and a reproduction guide. | Meets |
+| Technically accurate | Official documentation supports product claims; captured target rows support run-derived claims. | Meets |
+| Genuine expertise | The article explains the experimental design, assertions, unexpected outcomes, and limitations in the author's voice. | Meets |
+| No pure promotion | The article evaluates both strengths and boundaries and contains no commercial pitch. | Meets |
+| No documentation rehash | The article acknowledges the existing SQL introduction and contributes an adversarial, measured failure matrix instead of another syntax tutorial. | Meets |
+| No low-effort AI copy | The prose passed the outward-facing stop-slop review; the repository supplies the code and evidence behind every material result. | Meets |
+
+### Originality search
+
+The Databricks Technical Blog was searched on 2026-09-01 for the exact title
+and combinations of `AUTO CDC`, `Lakeflow`, `SEQUENCE BY`, sequence collision,
+wrong clock, `IGNORE NULL UPDATES`, `TRACK HISTORY`, and bitemporal.
+
+The closest article was [From 150 Lines of MERGE INTO to 7 Lines of SQL: AUTO
+CDC Comes to Databricks
+SQL](https://community.databricks.com/t5/technical-blog/from-150-lines-of-merge-into-to-7-lines-of-sql-auto-cdc-comes-to/ba-p/155355),
+published on 2026-04-24. It introduces SQL syntax, compares AUTO CDC with a
+manual `MERGE INTO`, and demonstrates a conventional SCD2 pipeline. It does
+not publish an adversarial scenario matrix, tied-order analysis, conflicting
+clock result, cross-update replay evidence, measured SCD2 noise comparison, or
+bitemporal correction timeline.
+
+No Technical Blog article with this article's title or experiment design was
+found in the search results. This is evidence of a reasonable search, not a
+guarantee that no unindexed or unpublished draft exists.
+
+### Publisher eligibility
+
+The guidelines list Databricks employees as individual or team contributors.
+Partner and customer organizations can contribute in their organization's
+name. The repository does not establish the author's employment or
+organizational submission status, so the author must confirm this requirement
+before submission.
+
 ## Limits
 
 The experiment does not cover throughput, schema evolution, multi-stream

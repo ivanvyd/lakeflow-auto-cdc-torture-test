@@ -14,6 +14,14 @@ This is an independent engineering experiment, not official Databricks guidance.
 
 ---
 
+## Prior Community coverage
+
+The Databricks Technical Blog already has a strong [AUTO CDC SQL introduction](https://community.databricks.com/t5/technical-blog/from-150-lines-of-merge-into-to-7-lines-of-sql-auto-cdc-comes-to/ba-p/155355). It shows how AUTO CDC replaces a long `MERGE INTO` implementation and builds a conventional SCD2 flow.
+
+This experiment starts with working flows and pushes them through adversarial source data. Its contribution is the 18-configuration failure matrix and the captured target state before and after late events and replays. The tests expose cases where a green pipeline still leaves a business decision unresolved.
+
+---
+
 ## The failures behind the experiment
 
 I have debugged CDC bugs caused by clocks that disagreed, replays that arrived days late, and sparse updates that nulled columns. I built a controlled experiment around those failures. The verifier encodes each expected state and captures the measured target rows.

@@ -42,8 +42,12 @@ def test_article_publication_assets_and_evidence_language() -> None:
     assert "bitemporal is the right tool" not in article.lower()
     assert "issues/new" in article
     assert "Five green results I would not ship" in article
+    assert "Prior Community coverage" in article
+    assert "from-150-lines-of-merge-into" in article
     assert "Five still needed intervention before production" in article
     assert "Five green results needed intervention before production" in fact_check
+    assert "Databricks Technical Blog submission audit" in fact_check
+    assert "Publisher eligibility" in fact_check
     assert "{{DATABRICKS_COMMUNITY_ARTICLE_URL}}" in linkedin
     assert "Databricks Community article" in linkedin
     assert not (ROOT / "article/publishing-kit.md").exists()
