@@ -1,7 +1,7 @@
 {
   "pipeline_id": "1ff99f04-078f-4c91-97e3-f06ad7614f7f",
-  "update_id": "5a2023ec-e38e-4da8-9a60-9cf0a56c73f6",
-  "captured_at": "2026-09-01T16:55:25.731492+00:00",
+  "update_id": "7b0c5f84-0691-4a99-afa5-f8df9e73318d",
+  "captured_at": "2026-09-01T17:36:26.201458+00:00",
   "targets": {
     "s01_duplicate_tgt": {
       "columns": [

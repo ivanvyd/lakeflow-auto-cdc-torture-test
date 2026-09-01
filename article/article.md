@@ -17,7 +17,7 @@ Every claim below traces to either:
 1. A measured row in `results/normalized/summary_matrix.md` (from `results/raw/scenario_results.json`).
 2. A passage in `docs/sources.md` from the official Databricks documentation.
 
-The pipeline and generator code is at `src/pipeline/pipeline.py` and `src/generators/dispatch.py`. The full reproduction recipe is in `docs/reproduction.md`; the per-claim trace is in `article/fact-check.md`. You can rerun the whole thing with `make setup && make test && make results`.
+The pipeline and generator code is in [`src/pipeline/pipeline.py`](../src/pipeline/pipeline.py) and [`src/generators/dispatch.py`](../src/generators/dispatch.py). The [reproduction guide](../docs/reproduction.md) and [claim-by-claim evidence ledger](fact-check.md) carry the operational detail. You can rerun the whole experiment with `make setup && make test && make results`.
 
 ---
 
@@ -400,8 +400,8 @@ The full reproduction guide is in `docs/reproduction.md`. Sources for every clai
 
 ## Verification (last full end-to-end run)
 
-The latest evidence uses pipeline `1ff99f04-078f-4c91-97e3-f06ad7614f7f`. Full-refresh update `5a2023ec-e38e-4da8-9a60-9cf0a56c73f6` established the baseline. Incremental update `ac575769-7e73-4021-934f-78139e15825e` processed the late and replay rows. Both completed.
+The latest evidence uses pipeline `1ff99f04-078f-4c91-97e3-f06ad7614f7f`. Full-refresh update `7b0c5f84-0691-4a99-afa5-f8df9e73318d` established the baseline. Incremental update `65a16199-93b3-4a6e-a08e-95ecf92c3763` processed the late and replay rows. Both completed.
 
 `capture_baseline.py` saved every target after the full refresh. `write_results.py` captured them again after the incremental update. Sixteen targets remained identical; only the two expected SCD2 histories changed. The verifier then checked row counts and scenario-specific state predicates for all 18 targets. Scenario 9's predicate matches all five valid-time and system-time intervals, not only the count. The resulting classification is 10 `HANDLED`, 3 `CONFIGURATION_DEPENDENT`, 3 `BUSINESS_SEMANTICS`, and 2 `AMBIGUOUS_ORDER`.
 
-The checked-in evidence includes `baseline_target_state.json`, `target_state.json`, the 18-row summary, and four figures. The bitemporal figure reads the captured rows directly. The clean-clone commands were also executed from the public repository after publication.
+The checked-in evidence includes `baseline_target_state.json`, `target_state.json`, the 18-row summary, and four figures. The bitemporal figure reads the captured rows directly. A clean checkout of the public feature branch must repeat the workflow before merge; that release gate is separate from this working-tree run.

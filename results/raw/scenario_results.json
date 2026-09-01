@@ -10,7 +10,7 @@
     "expected": "status=SUSPENDED via composite STRUCT(source_updated_at, transaction_sequence)",
     "observed": "1 row, status=SUSPENDED (composite SEQUENCE BY orders by (t, txn) = (0,1) vs (0,2))",
     "notes": "",
-    "captured_at": "2026-09-01T17:01:47.357114+00:00"
+    "captured_at": "2026-09-01T17:39:46.070254+00:00"
   },
   {
     "scenario": "04_wrong_clock_ingest",
@@ -23,7 +23,7 @@
     "expected": "status=ACTIVE; pipeline green; BUSINESS expectation diverges",
     "observed": "1 row, status=ACTIVE (ingest-time ordering treats 10:10 as newest, but business intent says 10:05 is newest)",
     "notes": "",
-    "captured_at": "2026-09-01T17:01:47.357114+00:00"
+    "captured_at": "2026-09-01T17:39:46.070254+00:00"
   },
   {
     "scenario": "03_seq_collision_b",
@@ -36,7 +36,7 @@
     "expected": "status=SUSPENDED, but only if transaction_sequence participates in SEQUENCE BY",
     "observed": "1 row, status=SUSPENDED in this run; transaction_sequence is present but not configured",
     "notes": "",
-    "captured_at": "2026-09-01T17:01:47.357114+00:00"
+    "captured_at": "2026-09-01T17:39:46.070254+00:00"
   },
   {
     "scenario": "07_replay_scd2",
@@ -49,7 +49,7 @@
     "expected": "Multiple history rows; final state is closed at __END_AT for seq=50",
     "observed": "4 history rows: PENDING[10,20)\u2192ACTIVE(Antalya)[20,30)\u2192ACTIVE(Izmir)[30,40)\u2192SUSPENDED(Ankara)[40,50)",
     "notes": "",
-    "captured_at": "2026-09-01T17:01:47.357114+00:00"
+    "captured_at": "2026-09-01T17:39:46.070254+00:00"
   },
   {
     "scenario": "08_history_a",
@@ -62,7 +62,7 @@
     "expected": "One business-significant history row; operational timestamps should not add versions",
     "observed": "51 history rows (every event creates a new version because last_synced_at changes)",
     "notes": "",
-    "captured_at": "2026-09-01T17:01:47.357114+00:00"
+    "captured_at": "2026-09-01T17:39:46.070254+00:00"
   },
   {
     "scenario": "08_history_b",
@@ -75,7 +75,7 @@
     "expected": "A small number of history rows (only business-significant changes)",
     "observed": "1 history row (TRACK HISTORY ON * EXCEPT (last_synced_at) suppresses 50 noise-only updates)",
     "notes": "",
-    "captured_at": "2026-09-01T17:01:47.357114+00:00"
+    "captured_at": "2026-09-01T17:39:46.070254+00:00"
   },
   {
     "scenario": "04_wrong_clock_source",
@@ -88,7 +88,7 @@
     "expected": "status=SUSPENDED; matches business intent (10:05 is the latest source event)",
     "observed": "1 row, status=SUSPENDED (source-time ordering picks 10:05 SUSPENDED)",
     "notes": "",
-    "captured_at": "2026-09-01T17:01:47.357114+00:00"
+    "captured_at": "2026-09-01T17:39:46.070254+00:00"
   },
   {
     "scenario": "07_replay_scd1",
@@ -101,7 +101,7 @@
     "expected": "Empty target after DELETE at source_sequence=50; pipeline green",
     "observed": "0 rows (final DELETE@50 applied; the prior history is overwritten by current state, which is empty)",
     "notes": "",
-    "captured_at": "2026-09-01T17:01:47.357114+00:00"
+    "captured_at": "2026-09-01T17:39:46.070254+00:00"
   },
   {
     "scenario": "03_seq_collision_a",
@@ -114,7 +114,7 @@
     "expected": "No deterministic business state: two different states share source_sequence=10",
     "observed": "1 row, status=SUSPENDED in this run; configured order is ambiguous",
     "notes": "",
-    "captured_at": "2026-09-01T17:01:47.357114+00:00"
+    "captured_at": "2026-09-01T17:39:46.070254+00:00"
   },
   {
     "scenario": "09_bitemporal",
@@ -127,7 +127,7 @@
     "expected": "Bitemporal history rows with __SYSTEM_START_AT / __SYSTEM_END_AT",
     "observed": "5 history rows with both __START_AT/__END_AT and __SYSTEM_START_AT/__SYSTEM_END_AT",
     "notes": "",
-    "captured_at": "2026-09-01T17:01:47.357114+00:00"
+    "captured_at": "2026-09-01T17:39:46.070254+00:00"
   },
   {
     "scenario": "06_delete_late_scd2",
@@ -140,7 +140,7 @@
     "expected": "History: ACTIVE@17 \u2192 SUSPENDED@18 \u2192 DELETE@20",
     "observed": "2 history rows: ACTIVE@17 closed at 18, SUSPENDED@18 closed at 20 (DELETE)",
     "notes": "",
-    "captured_at": "2026-09-01T17:01:47.357114+00:00"
+    "captured_at": "2026-09-01T17:39:46.070254+00:00"
   },
   {
     "scenario": "02_out_of_order_scd2",
@@ -153,7 +153,7 @@
     "expected": "Two history rows; ACTIVE is the active version",
     "observed": "2 history rows: PENDING@10 closed at 12, ACTIVE@12 current",
     "notes": "",
-    "captured_at": "2026-09-01T17:01:47.357114+00:00"
+    "captured_at": "2026-09-01T17:39:46.070254+00:00"
   },
   {
     "scenario": "05_sparse_a",
@@ -166,7 +166,7 @@
     "expected": "email NULL after sparse update; default behavior overwrites with NULL",
     "observed": "1 row, email=NULL (default: NULL means set to null)",
     "notes": "",
-    "captured_at": "2026-09-01T17:01:47.357114+00:00"
+    "captured_at": "2026-09-01T17:39:46.070254+00:00"
   },
   {
     "scenario": "01_duplicate_replay",
@@ -179,7 +179,7 @@
     "expected": "Single row, status=ACTIVE; same as scenario 1 base",
     "observed": "1 row, status=ACTIVE (replay dedupd by per-key max)",
     "notes": "",
-    "captured_at": "2026-09-01T17:01:47.357114+00:00"
+    "captured_at": "2026-09-01T17:39:46.070254+00:00"
   },
   {
     "scenario": "02_out_of_order",
@@ -192,7 +192,7 @@
     "expected": "status=ACTIVE; SCD1 keeps latest by source_sequence",
     "observed": "1 row, status=ACTIVE (per-key max on source_sequence=12)",
     "notes": "",
-    "captured_at": "2026-09-01T17:01:47.357114+00:00"
+    "captured_at": "2026-09-01T17:39:46.070254+00:00"
   },
   {
     "scenario": "06_delete_late_scd1",
@@ -205,7 +205,7 @@
     "expected": "Row deleted; late seq=18 event is dropped",
     "observed": "0 rows (DELETE@20 applied, late seq=18 dropped by per-key max)",
     "notes": "",
-    "captured_at": "2026-09-01T17:01:47.357114+00:00"
+    "captured_at": "2026-09-01T17:39:46.070254+00:00"
   },
   {
     "scenario": "05_sparse_b",
@@ -218,7 +218,7 @@
     "expected": "email=x@example.com (kept); city=Istanbul (updated)",
     "observed": "1 row, email=x@example.com (kept), city=Istanbul (updated)",
     "notes": "",
-    "captured_at": "2026-09-01T17:01:47.357114+00:00"
+    "captured_at": "2026-09-01T17:39:46.070254+00:00"
   },
   {
     "scenario": "01_duplicate",
@@ -231,6 +231,6 @@
     "expected": "Single row, status=ACTIVE; pipeline green",
     "observed": "1 row, status=ACTIVE",
     "notes": "",
-    "captured_at": "2026-09-01T17:01:47.357114+00:00"
+    "captured_at": "2026-09-01T17:39:46.070254+00:00"
   }
 ]

@@ -9,8 +9,8 @@ gate unless both pipeline updates complete and every verifier assertion passes.
 | Evidence | Current value |
 |---|---|
 | Pipeline | `1ff99f04-078f-4c91-97e3-f06ad7614f7f` |
-| Baseline full refresh | `5a2023ec-e38e-4da8-9a60-9cf0a56c73f6`, `COMPLETED` |
-| Late/replay incremental update | `ac575769-7e73-4021-934f-78139e15825e`, `COMPLETED` |
+| Baseline full refresh | `7b0c5f84-0691-4a99-afa5-f8df9e73318d`, `COMPLETED` |
+| Late/replay incremental update | `65a16199-93b3-4a6e-a08e-95ecf92c3763`, `COMPLETED` |
 | Baseline target snapshot | `results/raw/baseline_target_state.json` |
 | Before/after target evidence | `results/raw/target_state.json` |
 | Verified result rows | `results/raw/scenario_results.json`, 18 rows |
