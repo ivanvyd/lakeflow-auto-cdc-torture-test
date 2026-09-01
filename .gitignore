@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+.env
+.databricks/
+.codex/
+.playwright-mcp/
+*.log
+.DS_Store
+smart-routing-coding-benchmark/
+# local debug
+/tmp/
+# large generated outputs kept in repo are intentional; uncomment the next line to exclude them
+# results/raw/*.json
