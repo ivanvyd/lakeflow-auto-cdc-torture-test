@@ -34,7 +34,7 @@ def test_published_matrix_matches_article_summary() -> None:
 def test_article_publication_assets_and_evidence_language() -> None:
     article = (ROOT / "article/article.md").read_text(encoding="utf-8")
     fact_check = (ROOT / "article/fact-check.md").read_text(encoding="utf-8")
-    publishing_kit = (ROOT / "article/publishing-kit.md").read_text(encoding="utf-8")
+    linkedin = (ROOT / "article/linkedin.md").read_text(encoding="utf-8")
     hero = ROOT / "article/media/lakeflow-auto-cdc-torture-test-hero.jpg"
     assert hero.stat().st_size > 90_000
     assert "media/lakeflow-auto-cdc-torture-test-hero.jpg" in article
@@ -44,9 +44,9 @@ def test_article_publication_assets_and_evidence_language() -> None:
     assert "Five green results I would not ship" in article
     assert "Five still needed intervention before production" in article
     assert "Five green results needed intervention before production" in fact_check
-    assert "Databricks Community" in publishing_kit
-    assert "LinkedIn" not in publishing_kit
-    assert "carousel" not in publishing_kit.lower()
+    assert "{{DATABRICKS_COMMUNITY_ARTICLE_URL}}" in linkedin
+    assert "Databricks Community article" in linkedin
+    assert not (ROOT / "article/publishing-kit.md").exists()
     assert "raw.githubusercontent.com" in article
     assert "](../" not in article
 

@@ -4,7 +4,7 @@
 
 A reproducible engineering experiment that feeds nine hostile CDC streams into Lakeflow `AUTO CDC` and records what it handles, where configuration matters, where ordering is ambiguous, and which decisions belong to the business domain.
 
-This repository is the experiment. The [full article](article/article.md) is the report.
+This repository is the experiment. The [Databricks Community article](article/article.md) is the report.
 
 ## Scope
 
@@ -69,10 +69,15 @@ make cleanup CONFIRM_SCHEMA=auto_cdc_torture_test # drops schema and destroys th
 
 The default schema is `auto_cdc_torture_test`. Cleanup requires a separately supplied exact confirmation and refuses cascading deletion outside the `auto_cdc_torture` schema prefix. The Makefile does not derive that confirmation from the target schema.
 
-## Read next
+## Publishing files
 
-- [Full article](article/article.md)
-- [Databricks Community publishing kit](article/publishing-kit.md)
+- [Complete Databricks Community article](article/article.md)
+- [LinkedIn post linking to the Community article](article/linkedin.md)
+
+Replace `{{DATABRICKS_COMMUNITY_ARTICLE_URL}}` in the LinkedIn post after the Community publishes the article.
+
+## Evidence and reproduction
+
 - [Claim-by-claim evidence ledger](article/fact-check.md)
 - [Official source ledger](docs/sources.md)
 - [Reproduction guide](docs/reproduction.md)
