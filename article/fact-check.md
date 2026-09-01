@@ -30,6 +30,7 @@ The generated classification contains 10 `HANDLED`, 3
 | Replay targets remain unchanged. | `target_state.json` contains equal baseline and post-late snapshots for `s01_duplicate_replay_tgt`, `s07_replay_tgt`, and `s07_replay_scd2_tgt`. | Supported |
 | Only two visible targets change after the late phase. | `write_results.py` compares all columns and rows. It requires changes only in `s02_out_of_order_scd2_tgt` and `s06_delete_late_scd2_tgt`. The current run passed all 18 phase checks. | Supported |
 | Scenario timestamps represent seconds and minutes. | `_t` adds `timedelta(seconds=...)`. The generator unit test checks that `_t(300)` equals five minutes after `T0`. | Supported |
+| Five green results needed intervention before production. | All 18 configurations report `GREEN`. Configurations 3A and 3B have incomplete ordering; 4A, 5A, and 8A fail the experiment's business rule. The article names all five and labels the shipping judgment in the author's voice. | Supported editorial conclusion |
 
 ## Scenario claims
 

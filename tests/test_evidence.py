@@ -33,12 +33,16 @@ def test_published_matrix_matches_article_summary() -> None:
 
 def test_article_publication_assets_and_evidence_language() -> None:
     article = (ROOT / "article/article.md").read_text(encoding="utf-8")
+    fact_check = (ROOT / "article/fact-check.md").read_text(encoding="utf-8")
     hero = ROOT / "article/media/lakeflow-auto-cdc-torture-test-hero.jpg"
     assert hero.stat().st_size > 90_000
     assert "media/lakeflow-auto-cdc-torture-test-hero.jpg" in article
     assert "silently overwrites" not in article
     assert "bitemporal is the right tool" not in article.lower()
     assert "issues/new" in article
+    assert "Five green results I would not ship" in article
+    assert "Five still needed intervention before production" in article
+    assert "Five green results needed intervention before production" in fact_check
 
 
 def test_two_phase_evidence_covers_every_configuration() -> None:

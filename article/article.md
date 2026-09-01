@@ -1,22 +1,22 @@
-# I tried to break Lakeflow AUTO CDC
+# I tried to break Lakeflow AUTO CDC. All 18 configurations stayed green.
 
 ![A stream of CDC events splits into measured handled, ambiguous, and configuration-dependent outcomes.](media/lakeflow-auto-cdc-torture-test-hero.jpg)
 
 I fed nine hostile CDC streams into Lakeflow Declarative Pipelines `AUTO CDC`: duplicates, late events, tied sequence values, conflicting clocks, sparse NULL updates, deletes, replays, operational-noise updates, and bitemporal corrections.
 
-All 18 configurations completed in a green pipeline. Ten handled the input under a complete order. Three needed an explicit option. Three produced a target that violated the experiment's business rule. Two used tied sequence values whose winner the documentation does not define.
+All 18 configurations completed in a green pipeline. Five still needed intervention before production: three produced a target that violated the experiment's business rule, and two used tied sequence values whose winner the documentation does not define.
 
-> **The practical result:** a green update confirms execution. You still have to define what “newer,” NULL, and history mean for your source. Scenario 4 shows the main risk: choosing ingestion time for `SEQUENCE BY` can preserve the wrong business state.
+> **Start with the result you can ship by mistake:** scenario 4 ordered by ingestion time, completed green, and preserved `ACTIVE` when business time required `SUSPENDED`.
 
 **[Run the experiment](https://github.com/ivanvyd/lakeflow-auto-cdc-torture-test)** or **[audit every claim](fact-check.md)**.
 
 ---
 
-## Why I built this
+## The failures behind the experiment
 
 I have debugged CDC bugs caused by clocks that disagreed, replays that arrived days late, and sparse updates that nulled columns. I built a controlled experiment around those failures. The verifier encodes each expected state and captures the measured target rows.
 
-The article maps the boundary of `AUTO CDC`: its guarantees, its undefined inputs, and the configurations required beyond the defaults. AUTO CDC has a small, well-defined contract. Sources that violate it need an upstream fix or a different tool.
+I use this experiment to separate the `AUTO CDC` contract from the source decisions it cannot make. Sources that violate that contract need an upstream fix or a different tool.
 
 Every claim below traces to either:
 
@@ -37,6 +37,20 @@ The pipeline and generator code is in [`src/pipeline/pipeline.py`](../src/pipeli
 | Ambiguous order | 2 | Add a source-side tie-breaker before trusting the result. |
 
 Read scenario 4 first if your source has both business and ingestion timestamps. Scenario 3 covers tied sequence values. Scenarios 5 and 8 cover defaults that can change business state or inflate history.
+
+---
+
+## Five green results I would not ship
+
+| Configuration | Measured risk | Production action |
+|---|---|---|
+| 3A Sequence collision | Two business states shared one sequence value; the documented contract does not choose a winner. | Reject tied values or expose a stable source-side tie-breaker. |
+| 3B Tie-breaker not configured | The source supplied `transaction_sequence`, but the flow ignored it. The measured state matched while the order remained incomplete. | Configure a composite `SEQUENCE BY`. |
+| 4A Ingestion-time order | The target kept `ACTIVE`; business time required `SUSPENDED`. | Order by the timestamp that defines business recency. |
+| 5A Default NULL handling | A sparse update replaced the existing email with NULL. | Define NULL semantics and enable `IGNORE NULL UPDATES` when NULL means absent. |
+| 8A Track every column | Fifty sync-timestamp updates created 51 SCD2 history rows. | Exclude operational metadata from history tracking. |
+
+The other 13 configurations matched the experiment's business rule under a complete order and, where required, a documented option.
 
 ---
 
@@ -152,6 +166,8 @@ Measured under the composite order: 1 row, `status=SUSPENDED`. **HANDLED.**
 
 This is the documented way to encode a source-side tie-breaker. Use a composite when one column lacks the required resolution.
 
+**Production rule:** reject tied sequence values at ingestion or include a stable tie-breaker in `SEQUENCE BY`.
+
 Databricks documents `STRUCT(timestamp_col, id_col)` for composite sequencing: it orders by the first field and uses later fields to break ties.
 
 ---
@@ -190,6 +206,8 @@ Pipeline picks 10:05 as the latest event. Final state: `SUSPENDED`. Pipeline gre
 
 The two configurations use the same flow, data, and target schema. Changing `SEQUENCE BY` changes the answer from wrong to right.
 
+**Production rule:** choose the clock that defines business recency. Keep ingestion time for arrival analysis unless arrival order is the business rule.
+
 ---
 
 ## Scenario 5: sparse update / NULL semantics
@@ -210,6 +228,8 @@ A `customer` has `email='x@example.com'`. The next CDC event updates `city='Ista
 Databricks documents that `IGNORE NULL UPDATES` retains an existing target value when the corresponding incoming value is `NULL`.
 
 Without this option, the run completed and the target email became `NULL`. Scenario 5A demonstrates the measured result. Use `IGNORE NULL UPDATES` when NULL means "absent"; leave it off when NULL means "set to NULL."
+
+**Production rule:** make NULL semantics part of the source contract before you select the AUTO CDC option.
 
 ---
 
@@ -274,6 +294,8 @@ The same source, but `last_synced_at` is excluded from the columns that trigger 
 Databricks documents `TRACK HISTORY ON * EXCEPT` for excluding columns from history tracking.
 
 Many CDC sources update operational timestamps on each sync. Default SCD2 tracking then records those changes as new versions. Decide which columns carry business history before deploying the flow.
+
+**Production rule:** exclude sync metadata from history tracking unless auditors need each operational change as a business version.
 
 ![Tracking every column produces 51 SCD2 rows; excluding last_synced_at produces one.](../results/figures/scd2_history_noise.png)
 
