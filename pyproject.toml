@@ -1,0 +1,37 @@
+[project]
+name = "lakeflow-auto-cdc-torture-test"
+version = "0.1.0"
+description = "Adversarial CDC scenarios for Lakeflow AUTO CDC. Nine scenarios, deterministic assertions, evidence-driven article."
+requires-python = ">=3.10"
+authors = [
+    { name = "Ivan Vydrin" },
+]
+dependencies = [
+    "databricks-sdk==0.133.0",
+    "delta-spark==4.4.0",
+    "matplotlib==3.10.8; python_version < '3.11'",
+    "matplotlib==3.11.1; python_version >= '3.11'",
+    "pyspark==4.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.1.1",
+    "pytest-cov==7.1.0",
+    "ruff==0.16.5",
+    "setuptools==84.0.0",
+    "tomli==2.4.0; python_version < '3.11'",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src", "src.*"]
+namespaces = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

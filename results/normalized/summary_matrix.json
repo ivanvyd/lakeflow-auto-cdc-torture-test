@@ -1,0 +1,182 @@
+[
+  {
+    "scenario": "01_duplicate",
+    "configuration": "s01_duplicate_tgt",
+    "pipeline": "GREEN",
+    "correct_state": "YES",
+    "ordering": "COMPLETE",
+    "classification": "HANDLED",
+    "target_rows": "1",
+    "history_rows": "0"
+  },
+  {
+    "scenario": "01_duplicate_replay",
+    "configuration": "s01_duplicate_replay_tgt",
+    "pipeline": "GREEN",
+    "correct_state": "YES",
+    "ordering": "COMPLETE",
+    "classification": "HANDLED",
+    "target_rows": "1",
+    "history_rows": "0"
+  },
+  {
+    "scenario": "02_out_of_order",
+    "configuration": "s02_out_of_order_tgt",
+    "pipeline": "GREEN",
+    "correct_state": "YES",
+    "ordering": "COMPLETE",
+    "classification": "HANDLED",
+    "target_rows": "1",
+    "history_rows": "0"
+  },
+  {
+    "scenario": "02_out_of_order_scd2",
+    "configuration": "s02_out_of_order_scd2_tgt",
+    "pipeline": "GREEN",
+    "correct_state": "YES",
+    "ordering": "COMPLETE",
+    "classification": "HANDLED",
+    "target_rows": "2",
+    "history_rows": "2"
+  },
+  {
+    "scenario": "03_seq_collision_a",
+    "configuration": "s03_seq_collision_a_tgt",
+    "pipeline": "GREEN",
+    "correct_state": "NO",
+    "ordering": "AMBIGUOUS",
+    "classification": "AMBIGUOUS_ORDER",
+    "target_rows": "1",
+    "history_rows": "0"
+  },
+  {
+    "scenario": "03_seq_collision_b",
+    "configuration": "s03_seq_collision_b_tgt",
+    "pipeline": "GREEN",
+    "correct_state": "YES",
+    "ordering": "AMBIGUOUS",
+    "classification": "AMBIGUOUS_ORDER",
+    "target_rows": "1",
+    "history_rows": "0"
+  },
+  {
+    "scenario": "03_seq_collision_b_struct",
+    "configuration": "s03_seq_collision_b_struct_tgt",
+    "pipeline": "GREEN",
+    "correct_state": "YES",
+    "ordering": "COMPLETE",
+    "classification": "HANDLED",
+    "target_rows": "1",
+    "history_rows": "0"
+  },
+  {
+    "scenario": "04_wrong_clock_ingest",
+    "configuration": "s04_wrong_clock_ingest_tgt",
+    "pipeline": "GREEN",
+    "correct_state": "NO",
+    "ordering": "COMPLETE",
+    "classification": "BUSINESS_SEMANTICS",
+    "target_rows": "1",
+    "history_rows": "0"
+  },
+  {
+    "scenario": "04_wrong_clock_source",
+    "configuration": "s04_wrong_clock_source_tgt",
+    "pipeline": "GREEN",
+    "correct_state": "YES",
+    "ordering": "COMPLETE",
+    "classification": "CONFIGURATION_DEPENDENT",
+    "target_rows": "1",
+    "history_rows": "0"
+  },
+  {
+    "scenario": "05_sparse_a",
+    "configuration": "s05_sparse_a_tgt",
+    "pipeline": "GREEN",
+    "correct_state": "NO",
+    "ordering": "COMPLETE",
+    "classification": "BUSINESS_SEMANTICS",
+    "target_rows": "1",
+    "history_rows": "0"
+  },
+  {
+    "scenario": "05_sparse_b",
+    "configuration": "s05_sparse_b_tgt",
+    "pipeline": "GREEN",
+    "correct_state": "YES",
+    "ordering": "COMPLETE",
+    "classification": "CONFIGURATION_DEPENDENT",
+    "target_rows": "1",
+    "history_rows": "0"
+  },
+  {
+    "scenario": "06_delete_late_scd1",
+    "configuration": "s06_delete_late_tgt",
+    "pipeline": "GREEN",
+    "correct_state": "YES",
+    "ordering": "COMPLETE",
+    "classification": "HANDLED",
+    "target_rows": "0",
+    "history_rows": "0"
+  },
+  {
+    "scenario": "06_delete_late_scd2",
+    "configuration": "s06_delete_late_scd2_tgt",
+    "pipeline": "GREEN",
+    "correct_state": "YES",
+    "ordering": "COMPLETE",
+    "classification": "HANDLED",
+    "target_rows": "2",
+    "history_rows": "2"
+  },
+  {
+    "scenario": "07_replay_scd1",
+    "configuration": "s07_replay_tgt",
+    "pipeline": "GREEN",
+    "correct_state": "YES",
+    "ordering": "COMPLETE",
+    "classification": "HANDLED",
+    "target_rows": "0",
+    "history_rows": "0"
+  },
+  {
+    "scenario": "07_replay_scd2",
+    "configuration": "s07_replay_scd2_tgt",
+    "pipeline": "GREEN",
+    "correct_state": "YES",
+    "ordering": "COMPLETE",
+    "classification": "HANDLED",
+    "target_rows": "4",
+    "history_rows": "4"
+  },
+  {
+    "scenario": "08_history_a",
+    "configuration": "s08_history_a_scd2_tgt",
+    "pipeline": "GREEN",
+    "correct_state": "NO",
+    "ordering": "COMPLETE",
+    "classification": "BUSINESS_SEMANTICS",
+    "target_rows": "51",
+    "history_rows": "51"
+  },
+  {
+    "scenario": "08_history_b",
+    "configuration": "s08_history_b_scd2_tgt",
+    "pipeline": "GREEN",
+    "correct_state": "YES",
+    "ordering": "COMPLETE",
+    "classification": "CONFIGURATION_DEPENDENT",
+    "target_rows": "1",
+    "history_rows": "1"
+  },
+  {
+    "scenario": "09_bitemporal",
+    "configuration": "s09_bitemporal_tgt",
+    "pipeline": "GREEN",
+    "correct_state": "YES",
+    "ordering": "COMPLETE",
+    "classification": "HANDLED",
+    "target_rows": "5",
+    "history_rows": "5"
+  }
+]
