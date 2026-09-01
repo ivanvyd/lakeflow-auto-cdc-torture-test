@@ -1,6 +1,6 @@
-# I tried to break Lakeflow AUTO CDC. All 18 configurations stayed green.
+# I tried to break Lakeflow AUTO CDC: 18 green configurations, 5 I wouldn't ship
 
-![A stream of CDC events splits into measured handled, ambiguous, and configuration-dependent outcomes.](media/lakeflow-auto-cdc-torture-test-hero.jpg)
+![A stream of CDC events splits into measured handled, ambiguous, and configuration-dependent outcomes.](https://raw.githubusercontent.com/ivanvyd/lakeflow-auto-cdc-torture-test/main/article/media/lakeflow-auto-cdc-torture-test-hero.jpg)
 
 I fed nine hostile CDC streams into Lakeflow Declarative Pipelines `AUTO CDC`: duplicates, late events, tied sequence values, conflicting clocks, sparse NULL updates, deletes, replays, operational-noise updates, and bitemporal corrections.
 
@@ -8,7 +8,9 @@ All 18 configurations completed in a green pipeline. Five still needed intervent
 
 > **Start with the result you can ship by mistake:** scenario 4 ordered by ingestion time, completed green, and preserved `ACTIVE` when business time required `SUSPENDED`.
 
-**[Run the experiment](https://github.com/ivanvyd/lakeflow-auto-cdc-torture-test)** or **[audit every claim](fact-check.md)**.
+**[Run the experiment](https://github.com/ivanvyd/lakeflow-auto-cdc-torture-test)** or **[audit every claim](https://github.com/ivanvyd/lakeflow-auto-cdc-torture-test/blob/main/article/fact-check.md)**.
+
+This is an independent engineering experiment, not official Databricks guidance.
 
 ---
 
@@ -23,7 +25,7 @@ Every claim below traces to either:
 1. A measured row in `results/normalized/summary_matrix.md` (from `results/raw/scenario_results.json`).
 2. A passage in `docs/sources.md` from the official Databricks documentation.
 
-The pipeline and generator code is in [`src/pipeline/pipeline.py`](../src/pipeline/pipeline.py) and [`src/generators/dispatch.py`](../src/generators/dispatch.py). The [reproduction guide](../docs/reproduction.md) and [claim-by-claim evidence ledger](fact-check.md) carry the operational detail. You can rerun the whole experiment with `make setup && make test && make results`.
+The pipeline and generator code is in [`src/pipeline/pipeline.py`](https://github.com/ivanvyd/lakeflow-auto-cdc-torture-test/blob/main/src/pipeline/pipeline.py) and [`src/generators/dispatch.py`](https://github.com/ivanvyd/lakeflow-auto-cdc-torture-test/blob/main/src/generators/dispatch.py). The [reproduction guide](https://github.com/ivanvyd/lakeflow-auto-cdc-torture-test/blob/main/docs/reproduction.md) and [claim-by-claim evidence ledger](https://github.com/ivanvyd/lakeflow-auto-cdc-torture-test/blob/main/article/fact-check.md) carry the operational detail. You can rerun the whole experiment with `make setup && make test && make results`.
 
 ---
 
@@ -122,7 +124,7 @@ Update 1:  seq=12 ACTIVE.
 Update 2:  seq=10 PENDING arrives late.
 ```
 
-Documented behaviour: late events with smaller `SEQUENCE BY` values are dropped because the per-key maximum has advanced. Final state is the most recent in-sequence value.
+Documented behaviour: `SEQUENCE BY` defines logical event order. Databricks' official SCD1 example drops a late update whose sequence value is smaller than the value already applied. SCD2 keeps history, so its treatment is different.
 
 Measured (SCD1): 1 row, `status=ACTIVE`. **HANDLED.**
 
@@ -143,7 +145,7 @@ seq=10  status=ACTIVE
 seq=10  status=SUSPENDED        (same source_sequence, different state)
 ```
 
-The configured order is incomplete. Databricks documents `SEQUENCE BY` as the logical order of CDC events and recommends a `STRUCT` when one field cannot break ties. It does not document which payload wins when two different states share the same configured value.
+The configured order is incomplete. [Databricks documents `SEQUENCE BY`](https://learn.microsoft.com/en-us/azure/databricks/ldp/developer/ldp-sql-ref-apply-changes-into#parameters) as the logical order of CDC events and recommends a `STRUCT` when one field cannot break ties. It does not document which payload wins when two different states share the same configured value.
 
 Measured: 1 row, `status=SUSPENDED` in this run. Classification: **AMBIGUOUS_ORDER.** The observation does not identify a portable tie-resolution rule.
 
@@ -202,7 +204,7 @@ Pipeline picks 10:05 as the latest event. Final state: `SUSPENDED`. Pipeline gre
 
 > Out-of-order handling cannot choose the authoritative clock. If the business treats `source_updated_at` as the definition of "newer," use it in `SEQUENCE BY`. Ingestion time represents arrival order, which diverges from source time during batching, retries, and backfills.
 
-![Two AUTO CDC targets show that ingestion time misses the business expectation while source time matches it.](../results/figures/wrong_clock.png)
+![Two AUTO CDC targets show that ingestion time misses the business expectation while source time matches it.](https://raw.githubusercontent.com/ivanvyd/lakeflow-auto-cdc-torture-test/main/results/figures/wrong_clock.png)
 
 The two configurations use the same flow, data, and target schema. Changing `SEQUENCE BY` changes the answer from wrong to right.
 
@@ -225,7 +227,7 @@ A `customer` has `email='x@example.com'`. The next CDC event updates `city='Ista
 
 `email` is *kept* as `x@example.com`; `city` is updated to `'Istanbul'`. **HANDLED.** This is the documented knob for the (2) interpretation.
 
-Databricks documents that `IGNORE NULL UPDATES` retains an existing target value when the corresponding incoming value is `NULL`.
+[Databricks documents that `IGNORE NULL UPDATES`](https://learn.microsoft.com/en-us/azure/databricks/ldp/developer/ldp-python-ref-apply-changes#parameters) retains an existing target value when the corresponding incoming value is `NULL`; without it, the Python API defaults to overwriting the target value with `NULL`.
 
 Without this option, the run completed and the target email became `NULL`. Scenario 5A demonstrates the measured result. Use `IGNORE NULL UPDATES` when NULL means "absent"; leave it off when NULL means "set to NULL."
 
@@ -245,13 +247,13 @@ The first pipeline update processes `seq=17` and the delete at `seq=20`. The sec
 
 ### 6-scd1 (SCD1)
 
-Per-key max on `source_sequence`: the DELETE at `seq=20` wins, the late `seq=18` event is dropped. Final target: empty. **HANDLED.** The late event is gone, but the DELETE is the most recent CDC, and that's what AUTO CDC writes.
+Measured: the DELETE at `seq=20` remains the current SCD1 result when the older `seq=18` event arrives. Final target: empty. **HANDLED.**
 
 ### 6-scd2 (SCD2 with `TRACK HISTORY ON * EXCEPT`)
 
-Late `seq=18` *is* processed because per-key max sees it as a legitimate update between 17 and 20. History records: `ACTIVE@17` → `SUSPENDED@18` → `DELETE@20`. The DELETE closes the active row at `__END_AT=20`. **HANDLED.**
+Measured: late `seq=18` is inserted into its logical position between 17 and 20. History records: `ACTIVE@17` → `SUSPENDED@18` → `DELETE@20`. The DELETE closes the active row at `__END_AT=20`. **HANDLED.**
 
-This is the asymmetry I called out in scenario 2: late events are dropped in SCD1 and processed in SCD2. If you replay, you'll see different histories depending on storage type.
+In both measured late-event scenarios, the older event left the SCD1 current state unchanged but was inserted into SCD2 history. Storage type therefore changed what the visible target retained.
 
 ---
 
@@ -291,13 +293,13 @@ A default SCD2 flow sees `last_synced_at` change and creates 51 history rows. Th
 
 The same source, but `last_synced_at` is excluded from the columns that trigger a new history row. Result: 1 history row (the initial insert). All 50 noise updates collapse onto it. **CONFIGURATION_DEPENDENT.**
 
-Databricks documents `TRACK HISTORY ON * EXCEPT` for excluding columns from history tracking.
+[Databricks documents `TRACK HISTORY ON * EXCEPT`](https://learn.microsoft.com/en-us/azure/databricks/ldp/developer/ldp-sql-ref-apply-changes-into#parameters) for excluding columns from history tracking.
 
 Many CDC sources update operational timestamps on each sync. Default SCD2 tracking then records those changes as new versions. Decide which columns carry business history before deploying the flow.
 
 **Production rule:** exclude sync metadata from history tracking unless auditors need each operational change as a business version.
 
-![Tracking every column produces 51 SCD2 rows; excluding last_synced_at produces one.](../results/figures/scd2_history_noise.png)
+![Tracking every column produces 51 SCD2 rows; excluding last_synced_at produces one.](https://raw.githubusercontent.com/ivanvyd/lakeflow-auto-cdc-torture-test/main/results/figures/scd2_history_noise.png)
 
 ---
 
@@ -312,7 +314,7 @@ The target table carries *two* pairs of timestamps:
 
 Measured: 5 history rows, both pairs populated. **HANDLED.**
 
-![Five measured bitemporal rows show original and corrected beliefs across three system times.](../results/figures/bitemporal_timeline.png)
+![Five measured bitemporal rows show original and corrected beliefs across three system times.](https://raw.githubusercontent.com/ivanvyd/lakeflow-auto-cdc-torture-test/main/results/figures/bitemporal_timeline.png)
 
 The target has five rows because later events revise what the system knows about earlier valid-time intervals. With three events arriving at system times 60s, 180s, and 300s:
 
@@ -322,7 +324,7 @@ The target has five rows because later events revise what the system knows about
 
 The target preserves each original belief with a closed system-time interval and writes the corrected belief as a new open row. `target_state.json` contains all five measured rows; the figure reads from that capture.
 
-`SYSTEM SEQUENCE BY` applies to bitemporal storage. Databricks documents the mode as Beta. Its operational advantage over plain SCD2 is the ability to record "this is what we knew *as of* time X" after a correction. Bitemporal is a candidate when your source has a clean valid-time that differs from ingest time and you need to support late corrections without losing history.
+[`SYSTEM SEQUENCE BY` applies to bitemporal storage](https://learn.microsoft.com/en-us/azure/databricks/ldp/developer/ldp-sql-ref-apply-changes-into#parameters). Databricks documents the mode as Beta. Its operational advantage over plain SCD2 is the ability to record "this is what we knew *as of* time X" after a correction. Bitemporal is a candidate when your source has a clean valid-time that differs from ingest time and you need to support late corrections without losing history.
 
 ---
 
@@ -349,9 +351,9 @@ The target preserves each original belief with a closed system-time interval and
 | 8B Exclude sync timestamp | Green | Yes | Complete | Configuration-dependent |
 | 9 Bitemporal history | Green | Yes | Complete | Handled |
 
-![All 18 measured configurations grouped by handled, configuration-dependent, business-semantics, and ambiguous-order outcomes.](../results/figures/summary_matrix.png)
+![All 18 measured configurations grouped by handled, configuration-dependent, business-semantics, and ambiguous-order outcomes.](https://raw.githubusercontent.com/ivanvyd/lakeflow-auto-cdc-torture-test/main/results/figures/summary_matrix.png)
 
-The machine-readable matrix is in [`results/normalized/summary_matrix.json`](../results/normalized/summary_matrix.json), with the captured target rows in [`results/raw/target_state.json`](../results/raw/target_state.json).
+The machine-readable matrix is in [`results/normalized/summary_matrix.json`](https://github.com/ivanvyd/lakeflow-auto-cdc-torture-test/blob/main/results/normalized/summary_matrix.json), with the captured target rows in [`results/raw/target_state.json`](https://github.com/ivanvyd/lakeflow-auto-cdc-torture-test/blob/main/results/raw/target_state.json).
 
 ---
 
@@ -359,12 +361,12 @@ The machine-readable matrix is in [`results/normalized/summary_matrix.json`](../
 
 Reading across the scenarios, here is the contract as I now understand it, in three concentric layers.
 
-### Guaranteed, by documentation
+### Documented platform behavior
 
-- Per-key max on the `SEQUENCE BY` column (single column, or `STRUCT` / tuple for composite).
-- Drops late events with smaller `SEQUENCE BY` values.
+- `SEQUENCE BY` defines logical event order and can use a `STRUCT` for deterministic tie-breaking.
+- AUTO CDC handles out-of-sequence input. The official SCD1 example drops an older late update; SCD2 preserves ordered history.
 - `IGNORE NULL UPDATES` keeps existing values when an UPDATE event nulls them out.
-- `APPLY AS DELETE WHEN` translates flagged events into tombstones.
+- `APPLY AS DELETE WHEN` translates matching events into deletes; SCD2 uses temporary tombstones when handling out-of-order deletes.
 - `TRACK HISTORY ON * EXCEPT (col_list)` lets you opt columns out of triggering new SCD2 history rows.
 - `SYSTEM SEQUENCE BY` is supported in bitemporal storage (Beta).
 
