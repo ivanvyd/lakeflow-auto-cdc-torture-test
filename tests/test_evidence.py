@@ -25,10 +25,20 @@ def test_published_matrix_matches_article_summary() -> None:
         "AMBIGUOUS_ORDER": 2,
     }
     article = (ROOT / "article/article.md").read_text(encoding="utf-8")
-    assert "**ten** `HANDLED`" in article
-    assert "**three** `CONFIGURATION_DEPENDENT`" in article
-    assert "**three** `BUSINESS_SEMANTICS`" in article
-    assert "**two** `AMBIGUOUS_ORDER`" in article
+    assert "| Handled | 10 |" in article
+    assert "| Configuration-dependent | 3 |" in article
+    assert "| Business semantics | 3 |" in article
+    assert "| Ambiguous order | 2 |" in article
+
+
+def test_article_publication_assets_and_evidence_language() -> None:
+    article = (ROOT / "article/article.md").read_text(encoding="utf-8")
+    hero = ROOT / "article/media/lakeflow-auto-cdc-torture-test-hero.jpg"
+    assert hero.stat().st_size > 90_000
+    assert "media/lakeflow-auto-cdc-torture-test-hero.jpg" in article
+    assert "silently overwrites" not in article
+    assert "bitemporal is the right tool" not in article.lower()
+    assert "issues/new" in article
 
 
 def test_two_phase_evidence_covers_every_configuration() -> None:

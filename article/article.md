@@ -1,8 +1,14 @@
 # I tried to break Lakeflow AUTO CDC
 
-A reproducible report of feeding nine hostile CDC streams into a Lakeflow Declarative Pipelines `AUTO CDC` flow and recording what it does.
+![A stream of CDC events splits into measured handled, ambiguous, and configuration-dependent outcomes.](media/lakeflow-auto-cdc-torture-test-hero.jpg)
 
-> **TL;DR.** `AUTO CDC` applies the ordering and update semantics you configure. Scenario 4 shows the main risk: `SEQUENCE BY` encodes the domain's definition of "newer." An ingestion timestamp can produce a green pipeline with the wrong business state. `IGNORE NULL UPDATES`, `TRACK HISTORY ON * EXCEPT`, and composite `SEQUENCE BY` address the other tested failure modes. Across nine scenario families and eighteen configurations, the results are **ten** `HANDLED`, **three** `CONFIGURATION_DEPENDENT`, **three** `BUSINESS_SEMANTICS`, and **two** `AMBIGUOUS_ORDER`.
+I fed nine hostile CDC streams into Lakeflow Declarative Pipelines `AUTO CDC`: duplicates, late events, tied sequence values, conflicting clocks, sparse NULL updates, deletes, replays, operational-noise updates, and bitemporal corrections.
+
+All 18 configurations completed in a green pipeline. Ten handled the input under a complete order. Three needed an explicit option. Three produced a target that violated the experiment's business rule. Two used tied sequence values whose winner the documentation does not define.
+
+> **The practical result:** a green update confirms execution. You still have to define what “newer,” NULL, and history mean for your source. Scenario 4 shows the main risk: choosing ingestion time for `SEQUENCE BY` can preserve the wrong business state.
+
+**[Run the experiment](https://github.com/ivanvyd/lakeflow-auto-cdc-torture-test)** or **[audit every claim](fact-check.md)**.
 
 ---
 
@@ -18,6 +24,19 @@ Every claim below traces to either:
 2. A passage in `docs/sources.md` from the official Databricks documentation.
 
 The pipeline and generator code is in [`src/pipeline/pipeline.py`](../src/pipeline/pipeline.py) and [`src/generators/dispatch.py`](../src/generators/dispatch.py). The [reproduction guide](../docs/reproduction.md) and [claim-by-claim evidence ledger](fact-check.md) carry the operational detail. You can rerun the whole experiment with `make setup && make test && make results`.
+
+---
+
+## Results at a glance
+
+| Outcome | Configurations | What you should do |
+|---|---:|---|
+| Handled | 10 | Keep the complete sequence rule and test it against your source. |
+| Configuration-dependent | 3 | Set the documented option that matches your business rule. |
+| Business semantics | 3 | Change the chosen clock, NULL meaning, or history policy. |
+| Ambiguous order | 2 | Add a source-side tie-breaker before trusting the result. |
+
+Read scenario 4 first if your source has both business and ingestion timestamps. Scenario 3 covers tied sequence values. Scenarios 5 and 8 cover defaults that can change business state or inflate history.
 
 ---
 
@@ -49,7 +68,7 @@ For each scenario, three things are recorded:
 
 | Field | Meaning |
 |---|---|
-| `ordering_complete` | Does the configured `SEQUENCE BY` fully order rows with different business states? |
+| `ordering_complete` | Does the configured `SEQUENCE BY` order rows with different business states without ties? |
 | `business_assertion_passed`   | Did the resulting target match the *domain*'s expectation? |
 | `target_rows` / `history_rows` | The measured counts in the target table. |
 
@@ -89,7 +108,7 @@ Update 1:  seq=12 ACTIVE.
 Update 2:  seq=10 PENDING arrives late.
 ```
 
-Documented behaviour: late events with smaller `SEQUENCE BY` values are dropped, because per-key max is strictly monotonic. Final state is the most recent in-sequence value.
+Documented behaviour: late events with smaller `SEQUENCE BY` values are dropped because the per-key maximum has advanced. Final state is the most recent in-sequence value.
 
 Measured (SCD1): 1 row, `status=ACTIVE`. **HANDLED.**
 
@@ -121,7 +140,7 @@ seq=10  txn=1   status=ACTIVE
 seq=10  txn=2   status=SUSPENDED
 ```
 
-`source_sequence` is intentionally held constant. The source has a separate `transaction_sequence` column that gives a *real* ordering. AUTO CDC by itself has no way to know about it.
+`source_sequence` stays constant. The source has a separate `transaction_sequence` column that gives a *real* ordering. AUTO CDC by itself has no way to know about it.
 
 Measured: 1 row, `status=SUSPENDED`. The configured `SEQUENCE BY source_sequence` still ignores `transaction_sequence`, so the order remains incomplete. Classification: **AMBIGUOUS_ORDER.** The composite configuration below uses the available tie-breaker.
 
@@ -129,7 +148,7 @@ Measured: 1 row, `status=SUSPENDED`. The configured `SEQUENCE BY source_sequence
 
 Same rows as 3B, but `SEQUENCE BY` is `F.struct(F.col("source_updated_at"), F.col("transaction_sequence"))`. The composite key gives AUTO CDC the tie-breaker.
 
-Measured: 1 row, `status=SUSPENDED`, deterministically. **HANDLED.**
+Measured under the composite order: 1 row, `status=SUSPENDED`. **HANDLED.**
 
 This is the documented way to encode a source-side tie-breaker. Use a composite when one column lacks the required resolution.
 
@@ -169,7 +188,7 @@ Pipeline picks 10:05 as the latest event. Final state: `SUSPENDED`. Pipeline gre
 
 ![Two AUTO CDC targets show that ingestion time misses the business expectation while source time matches it.](../results/figures/wrong_clock.png)
 
-The two configurations use the same flow, data, and target schema. Changing only `SEQUENCE BY` changes the answer from wrong to right.
+The two configurations use the same flow, data, and target schema. Changing `SEQUENCE BY` changes the answer from wrong to right.
 
 ---
 
@@ -242,11 +261,11 @@ The replay check compares different things by storage type. SCD1 compares curren
 
 ## Scenario 8: SCD2 history noise
 
-A customer gets 50 updates where the only thing that changes is `last_synced_at` (an operational field that updates on every read of the source). All other business fields stay constant.
+A customer gets 50 updates where `last_synced_at` changes on every source read. All business fields stay constant.
 
 ### 8A: track every column
 
-A default SCD2 flow sees `last_synced_at` change and creates 51 history rows. The experiment's business rule wants history only for business-field changes. **BUSINESS_SEMANTICS.**
+A default SCD2 flow sees `last_synced_at` change and creates 51 history rows. The experiment's business rule records business-field changes. **BUSINESS_SEMANTICS.**
 
 ### 8B: `TRACK HISTORY ON * EXCEPT (last_synced_at)`
 
@@ -279,9 +298,9 @@ The target has five rows because later events revise what the system knows about
 - Event 2 closes that belief in system time, writes a corrected PENDING interval ending at business time 120s, and adds ACTIVE.
 - Event 3 closes the original ACTIVE belief in system time, writes a corrected ACTIVE interval ending at business time 240s, and adds SUSPENDED.
 
-The target preserves each original belief with a closed system-time interval and writes the corrected belief as a new open row. `target_state.json` contains all five measured rows; the figure reads those rows directly.
+The target preserves each original belief with a closed system-time interval and writes the corrected belief as a new open row. `target_state.json` contains all five measured rows; the figure reads from that capture.
 
-Bitemporal is the only context where `SYSTEM SEQUENCE BY` is honored. It is documented as Beta. The operational win over plain SCD2 is the ability to record "this is what we knew *as of* time X" even after the row has been corrected. If your source has a clean valid-time that differs from ingest time and you need to support late corrections without losing history, bitemporal is the right tool.
+`SYSTEM SEQUENCE BY` applies to bitemporal storage. Databricks documents the mode as Beta. Its operational advantage over plain SCD2 is the ability to record "this is what we knew *as of* time X" after a correction. Bitemporal is a candidate when your source has a clean valid-time that differs from ingest time and you need to support late corrections without losing history.
 
 ---
 
@@ -321,7 +340,7 @@ Reading across the scenarios, here is the contract as I now understand it, in th
 ### Guaranteed, by documentation
 
 - Per-key max on the `SEQUENCE BY` column (single column, or `STRUCT` / tuple for composite).
-- Drops late events with strictly smaller `SEQUENCE BY` values.
+- Drops late events with smaller `SEQUENCE BY` values.
 - `IGNORE NULL UPDATES` keeps existing values when an UPDATE event nulls them out.
 - `APPLY AS DELETE WHEN` translates flagged events into tombstones.
 - `TRACK HISTORY ON * EXCEPT (col_list)` lets you opt columns out of triggering new SCD2 history rows.
@@ -342,7 +361,7 @@ This list is a summary; the scenarios above are the measurements.
 - Order in the business's sense of "newest". The pipeline respects the `SEQUENCE BY` column you give it. If the column doesn't match the business's notion of time, you get a green pipeline with wrong state. (Scenario 4.)
 - A business order for different states that share one configured `SEQUENCE BY` value. The documentation tells you how to add a composite tie-breaker, not which tied payload wins. (Scenario 3.)
 - Survival of a sparse NULL update. Default is "set to NULL". If you want "absent", opt in. (Scenario 5.)
-- SCD2 history that excludes operational noise. Default is "every column change creates a row". If you want "business-significant changes only", opt in. (Scenario 8.)
+- SCD2 history that excludes operational noise. Default is "every column change creates a row". Opt in to tracking business-significant changes. (Scenario 8.)
 
 ---
 
@@ -350,7 +369,7 @@ This list is a summary; the scenarios above are the measurements.
 
 AUTO CDC fits three source-data conditions:
 
-1. **The configured sequence fully orders business states.** NULL has a defined meaning, and one column or composite defines order. AUTO CDC can then produce a stable SCD1 or SCD2 target without application code.
+1. **The configured sequence orders business states without ties.** NULL has a defined meaning, and one column or composite defines order. AUTO CDC can then produce a stable SCD1 or SCD2 target without application code.
 
 2. **Configuration can express the missing rule.** Composite `SEQUENCE BY`, `IGNORE NULL UPDATES`, and `TRACK HISTORY ON * EXCEPT` cover the tested variations.
 
@@ -364,8 +383,8 @@ For a new CDC stream, I check four things:
 
 1. **Pick `SEQUENCE BY` from the business definition of "newer."** If source time carries that meaning, use it. Ingestion time records arrival and may diverge during batching, retries, or backfills. This is scenario 4.
 2. **Check for duplicate sequence values per key.** If two events with the same `customer_id` can arrive with the same `source_sequence`, you have a 3A situation. Fix it upstream, or expose a tie-breaker as a composite `STRUCT` (3B-struct).
-3. **Decide what NULL means.** If your source can emit a sparse row where a column is "absent" (not "set to NULL"), turn on `IGNORE NULL UPDATES`. Default behaviour silently overwrites with NULL (scenario 5A).
-4. **Decide whether you want SCD1 or SCD2 before you write the flow.** They handle late events (scenario 2) and full replays (scenario 7) differently. For SCD2, list operational timestamps in `TRACK HISTORY ON * EXCEPT` to prevent history noise (scenario 8).
+3. **Decide what NULL means.** If your source can emit a sparse row where a column is "absent" (not "set to NULL"), turn on `IGNORE NULL UPDATES`. The default target in scenario 5A overwrote the existing value with NULL.
+4. **Decide whether you want SCD1 or SCD2 before you write the flow.** Their state models produce different results for late events (scenario 2) and full replays (scenario 7). For SCD2, list operational timestamps in `TRACK HISTORY ON * EXCEPT` to prevent history noise (scenario 8).
 
 Use bitemporal storage when source "as-of" time differs from ingest time and you need both histories. Use a streaming job when the domain requires custom merging of deletes and late updates.
 
@@ -401,6 +420,12 @@ The full reproduction guide is in `docs/reproduction.md`. Sources for every clai
 
 The latest evidence uses pipeline `1ff99f04-078f-4c91-97e3-f06ad7614f7f`. Full-refresh update `76337b92-46fd-445d-b929-7a85aa038471` established the baseline. Incremental update `d14e5ff1-b840-4e14-affd-902ec98f9fdf` processed the late and replay rows. Both completed.
 
-`capture_baseline.py` saved every target after the full refresh. `write_results.py` captured them again after the incremental update. Sixteen targets remained identical; only the two expected SCD2 histories changed. The verifier then checked row counts and scenario-specific state predicates for all 18 targets. Scenario 9's predicate matches all five valid-time and system-time intervals, not only the count. The resulting classification is 10 `HANDLED`, 3 `CONFIGURATION_DEPENDENT`, 3 `BUSINESS_SEMANTICS`, and 2 `AMBIGUOUS_ORDER`.
+`capture_baseline.py` saved every target after the full refresh. `write_results.py` captured them again after the incremental update. Sixteen targets remained identical; the two expected SCD2 histories changed. The verifier then checked row counts and scenario-specific state predicates for all 18 targets. Scenario 9's predicate matches all five valid-time and system-time intervals rather than the count alone. The resulting classification is 10 `HANDLED`, 3 `CONFIGURATION_DEPENDENT`, 3 `BUSINESS_SEMANTICS`, and 2 `AMBIGUOUS_ORDER`.
 
-The checked-in evidence includes `baseline_target_state.json`, `target_state.json`, the 18-row summary, and four figures. The bitemporal figure reads the captured rows directly. The release run cloned the public `release/article-evidence` branch at execution commit `01d53b4`, installed its pinned dependencies in a new virtual environment, and repeated `setup`, `test`, and `results` before merge.
+The checked-in evidence includes `baseline_target_state.json`, `target_state.json`, the 18-row summary, and four figures. The bitemporal figure reads the captured rows. The release run cloned the public `release/article-evidence` branch at execution commit `01d53b4`, installed its pinned dependencies in a new virtual environment, and repeated `setup`, `test`, and `results` before merge.
+
+## Test your own failure mode
+
+Clone the repository and replace one generator with an event sequence from your source. Encode the expected target state as a predicate, then run the baseline and late phase across separate pipeline updates.
+
+If the result exposes a case this suite misses, [open an issue](https://github.com/ivanvyd/lakeflow-auto-cdc-torture-test/issues/new) with the source rows, `SEQUENCE BY` expression, storage type, expected target, and observed target. Those details are enough to add a reproducible regression scenario.
