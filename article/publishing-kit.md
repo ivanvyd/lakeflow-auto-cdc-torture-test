@@ -1,70 +1,58 @@
-# Publishing kit
+# Databricks Community publishing kit
 
-## Suggested metadata
+This package is for the Databricks Community [Community Articles](https://community.databricks.com/t5/community-articles/bd-p/Knowledge-Sharing-Hub) section. Databricks' [submission announcement](https://community.databricks.com/t5/announcements/share-your-expertise-submit-your-blogs-and-videos-to-the/m-p/71752/highlight/true) directs technical contributors to post their findings there for review.
 
-**Title:** I tried to break Lakeflow AUTO CDC. All 18 configurations stayed green.
+## Submission fields
 
-**Description:** All 18 AUTO CDC configurations stayed green. Five still needed intervention before production. Inspect the measured rows and rerun every case.
+**Title:** I tried to break Lakeflow AUTO CDC: 18 green configurations, 5 I wouldn't ship
 
-**Hero image:** [`media/lakeflow-auto-cdc-torture-test-hero.jpg`](media/lakeflow-auto-cdc-torture-test-hero.jpg)
+**Teaser:** Every configuration completed in a green pipeline. Three produced the wrong business state, and two left ordering ambiguous. Here are the target rows, fixes, and a reproducible test suite.
 
-**Hero alt text:** A stream of CDC events splits into measured handled, ambiguous, and configuration-dependent outcomes.
+**Suggested labels:** `Data Engineering`, `Databricks Lakeflow`, `CDC`, `Delta Lake`
 
-## LinkedIn post
+Use only labels offered by the Community editor. The first three are the most specific choices if the editor limits the number of labels.
 
-All 18 Lakeflow AUTO CDC configurations went green. Five still needed intervention before production.
+## Hero image
 
-I ran nine hostile streams through Lakeflow AUTO CDC: late events, tied sequence values, sparse NULL updates, deletes, replays, SCD2 noise, and bitemporal corrections.
+**File:** [`lakeflow-auto-cdc-torture-test-hero.jpg`](media/lakeflow-auto-cdc-torture-test-hero.jpg)
 
-The measured split:
+**Direct URL:** https://raw.githubusercontent.com/ivanvyd/lakeflow-auto-cdc-torture-test/main/article/media/lakeflow-auto-cdc-torture-test-hero.jpg
 
-- 10 handled the input under a complete order
-- 3 needed an explicit configuration
-- 3 violated the experiment's business rule
-- 2 had ambiguous ordering
+**Alt text:** A stream of CDC events splits into measured handled, ambiguous, and configuration-dependent outcomes.
 
-Scenario 4 ordered by ingestion time, completed green, and preserved `ACTIVE` when business time required `SUSPENDED`.
+Upload the image through the Community editor rather than relying on the direct URL. This gives the post a Community-hosted thumbnail and avoids third-party image loading failures.
 
-The repository includes the generators, pipeline, before-and-after target rows, assertions for all 18 configurations, and a fresh-clone reproduction guide.
+## Opening preview
 
-Read it and run the experiment: https://github.com/ivanvyd/lakeflow-auto-cdc-torture-test/blob/main/article/article.md
+All 18 Lakeflow AUTO CDC configurations completed in a green pipeline. I still would not ship five of them.
 
-Reply with the CDC failure mode you have seen in production.
+I tested duplicates, late events, tied sequence values, conflicting clocks, sparse NULL updates, deletes, full replays, SCD2 history noise, and bitemporal corrections. Three configurations violated the experiment's business rule. Two used incomplete ordering. The repository includes the generators, flow definitions, before-and-after target rows, assertions, and a fresh-clone reproduction guide.
 
-## Short post
+The most dangerous result was not a failed pipeline. It was a green pipeline ordered by ingestion time that preserved `ACTIVE` when the business clock required `SUSPENDED`.
 
-All 18 Lakeflow AUTO CDC configurations finished green. Five still needed intervention before production: three violated the experiment's business rule, and two had ambiguous ordering. Code, target rows, and reproduction guide: https://github.com/ivanvyd/lakeflow-auto-cdc-torture-test
+## Article body
 
-## Five-slide carousel script
+Use [`article.md`](article.md) as the canonical body. When the Community editor has a separate title field, paste from the hero image onward and omit the Markdown H1.
 
-### Slide 1
+The article uses absolute public URLs for figures, code, evidence, and official Databricks documentation so its links remain valid outside GitHub. For the best presentation, upload all four figures through the Community editor and retain their existing alt text:
 
-**All 18 AUTO CDC configurations stayed green.**
+1. `results/figures/wrong_clock.png`
+2. `results/figures/scd2_history_noise.png`
+3. `results/figures/bitemporal_timeline.png`
+4. `results/figures/summary_matrix.png`
 
-Five still needed intervention before production.
+## Closing discussion prompt
 
-### Slide 2
+Which CDC failure mode has reached production in your system: the wrong clock, a tied sequence, ambiguous NULL semantics, noisy SCD2 history, or something this suite does not cover? If you can reduce it to source rows plus an expected target, open an issue and I will turn it into a reproducible scenario.
 
-**Three green results violated the business rule.**
+## Final editor check
 
-The wrong clock preserved the wrong state. Default NULL handling replaced an existing value with NULL. Tracking an operational timestamp created 51 SCD2 rows.
+- Keep the independent-experiment disclosure near the top.
+- Preserve the word **Beta** everywhere bitemporal AUTO CDC is discussed.
+- Keep measured results labeled as measured; do not recast them as universal platform guarantees.
+- Verify the hero and four result figures render at desktop and mobile widths.
+- Verify the repository, evidence ledger, official documentation, and issue links open in a signed-out browser.
+- Preview code blocks, tables, and alt text before requesting publication.
+- Do not add claims about throughput, scale, schema evolution, or multi-stream joins; those were not tested.
 
-### Slide 3
-
-**Two green results had ambiguous order.**
-
-Different business states shared the same sequence value. The documentation does not define which tied payload wins.
-
-### Slide 4
-
-**Fix the source contract and flow.**
-
-Use a composite sequence, define NULL semantics, and exclude operational metadata from history tracking.
-
-### Slide 5
-
-**Run the same failures against your source.**
-
-Nine hostile streams, 18 configurations, captured target rows, and a fresh-clone reproduction guide.
-
-https://github.com/ivanvyd/lakeflow-auto-cdc-torture-test
+The repository is public and reproducible: https://github.com/ivanvyd/lakeflow-auto-cdc-torture-test

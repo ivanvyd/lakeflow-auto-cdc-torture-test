@@ -46,8 +46,8 @@ deduplication.
 The baseline contains sequence 12. The second update appends sequence 10.
 SCD1 remains one `ACTIVE` row. SCD2 changes from one row to two:
 `PENDING[10,12)` and an open `ACTIVE@12` row. Official source D1 documents
-late-event handling; the checked-in snapshots prove this run's SCD1/SCD2
-outputs.
+the SCD1 late-update example and the SCD2 history model; the checked-in
+snapshots prove this run's exact SCD1/SCD2 outputs.
 
 ### 3. Sequence collision
 
