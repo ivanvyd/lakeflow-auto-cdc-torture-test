@@ -8,7 +8,7 @@ This document is the exact recipe to run the experiment from a clean checkout.
 - **Databricks CLI** ≥ 0.292.0 (tested with 1.10.0).
 - **Python** ≥ 3.10 locally.
 - **GNU Make** and **jq** for the convenience targets below. On Windows, GNU Make may be installed as `mingw32-make`; substitute that executable for `make`.
-- A user with permission to create catalogs / schemas (or an existing sandbox catalog).
+- A user with permission to use the target catalog and create an isolated schema.
 - Serverless pipelines enabled in the workspace.
 
 The experiment does **not** need:
