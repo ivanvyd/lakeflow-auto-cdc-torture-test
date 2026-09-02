@@ -1,0 +1,45 @@
+bundle:
+  name: lakeflow-auto-cdc-torture-test
+  uuid: 8a3e6f1c-4b29-4d9c-b0e1-2a5f3c1d8e47
+
+variables:
+  catalog:
+    description: Catalog for all auto_cdc_torture_test objects.
+    default: workspace
+  schema:
+    description: Schema for all auto_cdc_torture_test objects.
+    default: auto_cdc_torture_test
+
+resources:
+  pipelines:
+    auto_cdc_torture_pipeline:
+      name: auto_cdc_torture_pipeline
+      catalog: ${var.catalog}
+      schema: ${var.schema}
+      serverless: true
+      edition: ADVANCED
+      channel: CURRENT
+      continuous: false
+      libraries:
+        - file:
+            path: ./src/pipeline/pipeline.py
+      environment:
+        dependencies:
+          - --editable ${workspace.file_path}
+      configuration:
+        pipelines.cdc.tombstoneGCThresholdInSeconds: "172800"
+        auto_cdc_torture.catalog: ${var.catalog}
+        auto_cdc_torture.schema: ${var.schema}
+      parameters: {}
+
+targets:
+  dev:
+    mode: development
+    default: true
+    variables:
+      catalog: workspace
+      schema: auto_cdc_torture_test
+
+workspace:
+  artifact_path: /Users/${workspace.current_user.userName}/auto_cdc_torture/.bundle/${bundle.name}
+  file_path: /Users/${workspace.current_user.userName}/auto_cdc_torture/files

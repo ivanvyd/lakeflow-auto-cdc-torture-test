@@ -1,0 +1,96 @@
+{
+  "name": "Measured Editorial",
+  "version": 2,
+  "intent": "A restrained editorial system for evidence-driven Databricks engineering content.",
+  "principles": [
+    "Evidence carries the visual weight.",
+    "Use one technical idea per image.",
+    "Keep generous negative space and a tactile paper surface.",
+    "Use color to encode meaning, not decoration."
+  ],
+  "palette": {
+    "ink": {
+      "hex": "#171717",
+      "use": "Primary text, sequence lines, outlines"
+    },
+    "bone": {
+      "hex": "#F4F0E8",
+      "use": "Canvas and thumbnail background"
+    },
+    "paper": {
+      "hex": "#FFFCF7",
+      "use": "Cards and quiet surfaces"
+    },
+    "teal": {
+      "hex": "#4F8F87",
+      "use": "Handled outcomes and matched business state"
+    },
+    "ochre": {
+      "hex": "#D3A64A",
+      "use": "Configuration-dependent outcomes and pending state"
+    },
+    "vermilion": {
+      "hex": "#DF5143",
+      "use": "Business-semantics failures and production intervention"
+    },
+    "violet": {
+      "hex": "#7D6B9F",
+      "use": "Ambiguous ordering"
+    },
+    "muted": {
+      "hex": "#746F68",
+      "use": "Secondary labels"
+    },
+    "grid": {
+      "hex": "#D9D2C6",
+      "use": "Guides and time markers"
+    }
+  },
+  "outcome_mapping": {
+    "HANDLED": "teal",
+    "CONFIGURATION_DEPENDENT": "ochre",
+    "BUSINESS_SEMANTICS": "vermilion",
+    "AMBIGUOUS_ORDER": "violet"
+  },
+  "typography": {
+    "primary": "Segoe UI",
+    "fallback": "DejaVu Sans",
+    "rules": [
+      "Use sentence case for titles.",
+      "Use bold weight for measured numbers and state names.",
+      "Keep text out of generated illustrations."
+    ]
+  },
+  "brand": {
+    "asset": "article/media/databricks-lockup-full-color.png",
+    "source": "Official Databricks Brandfolder full-color horizontal lockup",
+    "colors": {
+      "lava": "#FF3621",
+      "navy": "#0B2026"
+    },
+    "placement": "Upper right on every article-facing image, sized to 10.5% of canvas width with 3% outer clear space",
+    "rules": [
+      "Use the official full-color lockup without recoloring, distortion, or reconfiguration.",
+      "Keep the logo subordinate to the measured result or article title.",
+      "Do not use the logo as a decorative pattern or imply official Databricks authorship."
+    ]
+  },
+  "composition": {
+    "style": "Swiss editorial geometry with Japanese print restraint",
+    "texture": "Uncoated paper, light letterpress indentation, restrained physical shadow",
+    "thumbnail": "Use a 1200x630 crop of the article hero. Set the direct article title in the upper-left quiet space using ink-black type with a muted subtitle. Keep the focal event split right of center. Add only the official Databricks lockup at the upper right; do not add a kicker, badge, slogan, or filler text.",
+    "charts": "Use a bone canvas, paper cards, black text, thin outlines, a single semantic accent per mark, and the official Databricks lockup at the upper right."
+  },
+  "avoid": [
+    "Neon glow",
+    "Cyberpunk or sci-fi portals",
+    "Circuit-board decoration",
+    "Glossy 3D blocks",
+    "Glassmorphism",
+    "Generic data tunnels",
+    "Decorative gradients",
+    "AI-generated text",
+    "Dense dashboard chrome"
+  ],
+  "prompt_suffix": "Measured Editorial style: warm bone paper, ink-black geometry, muted mineral teal, ochre, vermilion, and dusty violet; tactile screenprint and letterpress restraint; generous negative space; no generated text or logos, neon, circuits, glossy 3D, glassmorphism, or generic technology imagery. Apply the official Databricks lockup separately as an exact production asset."
+}
