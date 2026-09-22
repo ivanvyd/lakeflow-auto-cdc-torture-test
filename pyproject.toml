@@ -10,7 +10,7 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = [
-    "databricks-sdk==0.133.0",
+    "databricks-sdk==0.139.0",
     "matplotlib==3.10.8; python_version < '3.11'",
     "matplotlib==3.11.1; python_version >= '3.11'",
     "pillow==12.3.0",
