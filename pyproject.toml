@@ -16,7 +16,7 @@ dev = [
     "pillow==12.3.0",
     "pytest==9.1.1",
     "pytest-cov==7.1.0",
-    "ruff==0.16.5",
+    "ruff==0.17.2",
     "setuptools==84.0.0",
     "tomli==2.4.0; python_version < '3.11'",
 ]
